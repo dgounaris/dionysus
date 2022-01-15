@@ -1,0 +1,7 @@
+rootProject.name = 'Dionysus'
+include 'clients'
+include 'playlists'
+include 'auth'
+include 'auth:src:main:untitled'
+findProject(':auth:src:main:untitled')?.name = 'untitled'
+
