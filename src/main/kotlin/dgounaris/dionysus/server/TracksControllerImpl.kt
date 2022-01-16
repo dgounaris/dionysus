@@ -4,6 +4,7 @@ import dgounaris.dionysus.clients.SpotifyClient
 import io.ktor.application.*
 import io.ktor.response.*
 import io.ktor.routing.*
+import kotlinx.coroutines.runBlocking
 
 class TracksControllerImpl(private var spotifyClient: SpotifyClient): TracksController {
     override fun configureRouting(application: Application) {
@@ -17,6 +18,6 @@ class TracksControllerImpl(private var spotifyClient: SpotifyClient): TracksCont
     }
 
     private fun analyzeTrack(trackId: String) =
-        spotifyClient.getTrackAudioAnalysis(trackId)
+        runBlocking { spotifyClient.getTrackAudioAnalysis(trackId) }
 
 }

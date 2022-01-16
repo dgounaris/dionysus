@@ -1,7 +1,7 @@
 package dgounaris.dionysus.playback
 
-import dgounaris.dionysus.playlists.models.Playlist
+import dgounaris.dionysus.tracks.models.TrackSections
 
 interface PlaybackHandler {
-    fun play(playlist: Playlist, segmentMsList: List<List<Int>>)
+    fun play(playlistId: String, tracksSections: List<TrackSections>)
 }

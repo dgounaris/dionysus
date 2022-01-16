@@ -20,9 +20,7 @@ class AuthorizationControllerImpl(private val spotifyClient: SpotifyClient) : Au
             }
             get("/callback") {
                 callback(call.request.queryParameters["code"]!!, call.request.queryParameters["state"])
-                call.respondText {
-                    "Access token successfully retrieved."
-                }
+                call.respondRedirect("http://localhost:8888/playlists/me", false)
             }
         }
     }

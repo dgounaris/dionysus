@@ -1,70 +1,61 @@
 package dgounaris.dionysus.playback
 
 import dgounaris.dionysus.clients.SpotifyClient
-import dgounaris.dionysus.clients.models.TrackAudioAnalysisResponseDto
-import dgounaris.dionysus.playlists.models.Playlist
+import dgounaris.dionysus.tracks.models.TrackSections
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import kotlin.math.max
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
 
-class PlaybackHandlerImpl(private val spotifyClient: SpotifyClient) : PlaybackHandler {
-    override fun play(playlist: Playlist, segmentMsList: List<List<Int>>) {
-        val trackAnalyses = playlist.tracks.map { track -> spotifyClient.getTrackAudioAnalysis(track.id) }
-        println("Starting automated playback in 10 seconds, prepare your system...")
-        runBlocking { delay(10000) }
-        trackAnalyses.zip(segmentMsList).forEachIndexed { index, trackSegmentPair ->
-            playNextSongSections(trackSegmentPair.first, trackSegmentPair.second, index)
+class PlaybackHandlerImpl(
+    private val spotifyClient: SpotifyClient
+    ) : PlaybackHandler {
+
+    override fun play(playlistId: String, tracksSections: List<TrackSections>) {
+        tracksSections.forEach { trackSections ->
+            playNextSongSections(playlistId, trackSections)
         }
     }
 
-    private fun playNextSongSections(analysis: TrackAudioAnalysisResponseDto, sectionsMs: List<Int>, index: Int) {
-        val sectionsToPlay = findSongSectionsToPlay(analysis, sectionsMs)
-        if (index != 0) {
-            // don't skip first song, can be done in a better designed way later
-            spotifyClient.playNext()
+    private fun playNextSongSections(playlistId: String, trackSections: TrackSections) {
+        val sectionsToPlay = findSongSectionsToPlay(trackSections)
+        sectionsToPlay.firstOrNull()?.apply {
+            spotifyClient.playPlaylistTrack(playlistId, trackSections.id, (this@apply.start * 1000).toInt())
+            runBlocking { delay((this@apply.end * 1000 - this@apply.start * 1000).roundToLong()) }
         }
-        sectionsToPlay.forEach { sectionToPlay ->
-            spotifyClient.seekPlaybackPosition(sectionToPlay.start)
-            runBlocking { delay(sectionToPlay.duration.toLong()) }
+        sectionsToPlay.drop(1).forEach { sectionToPlay ->
+            spotifyClient.seekPlaybackPosition((sectionToPlay.start * 1000).roundToInt())
+            runBlocking { delay((sectionToPlay.end * 1000 - sectionToPlay.start * 1000).roundToLong()) }
         }
     }
 
-    private fun findSongSectionsToPlay(analysis: TrackAudioAnalysisResponseDto, sectionsMs: List<Int>): List<Section> {
-        if (sectionsMs.isEmpty()) {
-            return emptyList()
-        }
-        val sectionsToPlay = sectionsMs.map { sectionMs -> findSongSectionToPlay(analysis, sectionMs) }
-        val distinctOrderedSections = sectionsToPlay
+    private fun findSongSectionsToPlay(trackSections: TrackSections): List<Section> {
+        val distinctOrderedSections = trackSections.sections
             .distinctBy { section -> section.start }
             .sortedBy { section -> section.start }
-            .map { section -> Section((section.start * 1000).roundToInt(), (section.duration * 1000).roundToInt()) }
-            .toMutableList()
+            .map { section -> Section(
+                section.start, section.end
+            ) }
         return mergeAdjacentSections(distinctOrderedSections)
     }
 
     private fun mergeAdjacentSections(sections: List<Section>): List<Section> {
-        var previousSection = sections.first()
+        var previousSection = sections.firstOrNull() ?: return emptyList()
         val finalSectionList = mutableListOf(previousSection)
         for(index in 1 until sections.size) {
-            if (previousSection.start + previousSection.duration != sections[index].start) {
+            if (previousSection.end < sections[index].start - 0.1) { // -0.1 to tolerate arithmetic inaccuracies
                 finalSectionList.add(sections[index])
             } else {
-                finalSectionList.last().duration += sections[index].duration
+                finalSectionList.last().end = max(sections[index].end, finalSectionList.last().end)
             }
             previousSection = sections[index]
         }
         return finalSectionList
     }
-
-    private fun findSongSectionToPlay(analysis: TrackAudioAnalysisResponseDto, sectionMs: Int) =
-        analysis.sections.first {
-                section -> (section.start * 1000).roundToInt() <= sectionMs &&
-                ((section.start + section.duration) * 1000).roundToInt() >= sectionMs
-        }
 }
 
 data class Section(
-    val start: Int,
-    var duration: Int
+    val start: Double,
+    var end: Double
 )

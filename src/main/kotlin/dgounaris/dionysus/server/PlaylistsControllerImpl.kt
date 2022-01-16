@@ -1,13 +1,16 @@
 package dgounaris.dionysus.server
 
+import dgounaris.dionysus.common.parallelMap
 import dgounaris.dionysus.playlists.PlaylistDetailsProvider
 import dgounaris.dionysus.tracks.TrackDetailsProvider
 import dgounaris.dionysus.tracks.models.TrackDetails
 import io.ktor.application.*
 import io.ktor.html.*
 import io.ktor.http.*
+import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
+import kotlinx.coroutines.runBlocking
 import kotlinx.html.*
 import kotlinx.html.dom.document
 
@@ -18,17 +21,23 @@ class PlaylistsControllerImpl(
     override fun configureRouting(application: Application) {
         application.routing {
             get("/playlists/tracks") {
-                val playlistId = call.request.queryParameters["playlistName"]!!
+                val playlistId = call.request.queryParameters["playlistName"]
+                    ?: call.receiveParameters()["playlistName"]!!
                 call.respondHtml { getPlaylistTracks(playlistId, this) }
+            }
+            get("/playlists/me") {
+                call.respondHtml { getCurrentUserPlaylists(this) }
             }
         }
     }
 
     private fun getPlaylistTracks(playlistName: String, html: HTML) {
         val playlist = playlistDetailsProvider.getPlaylistDetails(playlistName)
-        val playlistTrackDetails = playlist.tracks.take(5).map { track ->
-            val trackDetails = trackDetailsProvider.getTrackDetails(track)
-            trackDetails.toTrackDetailsResponseDto()
+        val playlistTrackDetails = runBlocking {
+            playlist.tracks.parallelMap { track ->
+                val trackDetails = trackDetailsProvider.getTrackDetails(track)
+                trackDetails.toTrackDetailsResponseDto()
+            }
         }
         val playlistResponse = PlaylistResponseDto(
             playlist.name, playlist.id, playlistTrackDetails
@@ -45,9 +54,9 @@ class PlaylistsControllerImpl(
                 input {
                     hidden = true
                     type = InputType.hidden
-                    name = "playlistName_$playlistName"
-                    id = "playlistName_$playlistName"
-                    value = playlistName
+                    name = "playlistId_${playlist.id}"
+                    id = "playlistId_${playlist.id}"
+                    value = playlist.id
                     hidden
                 }
                 ol {
@@ -57,25 +66,53 @@ class PlaylistsControllerImpl(
                             trackDetails.sections.map { section ->
                                 input {
                                     type = InputType.checkBox
-                                    name = "trackSection_${trackDetails.name}"
-                                    id = "trackSection_${trackDetails.name}_${section.start}-${section.end}"
+                                    name = "trackSection_${trackDetails.id}"
+                                    id = "trackSection_${trackDetails.id}_${section.start}-${section.end}"
                                     value = "${section.start}-${section.end}"
                                 }
                                 label {
-                                    htmlFor = "trackSection_${trackDetails.name}_${section.start}-${section.end}"
+                                    htmlFor = "trackSection_${trackDetails.id}_${section.start}-${section.end}"
                                     text("${String.format("%.2f", section.start)}-${String.format("%.2f", section.end)}")
                                 }
                             }
                             input {
                                 hidden = true
                                 type = InputType.hidden
-                                name = "trackSection_${trackDetails.name}"
-                                id = "trackSection_${trackDetails.name}_placeholder"
+                                name = "trackSection_${trackDetails.id}"
+                                id = "trackSection_${trackDetails.id}_placeholder"
                                 value = ""
                                 hidden
                             }
                         }
                         br
+                    }
+                }
+                input {
+                    type = InputType.submit
+                    value = "Submit"
+                }
+            }
+        }
+    }
+
+    private fun getCurrentUserPlaylists(html: HTML) {
+        val currentUserPlaylists = playlistDetailsProvider.getCurrentUserPlaylistNames()
+        html.body {
+            form {
+                action = "http://localhost:8888/playlists/tracks"
+                method = FormMethod.get
+                label {
+                    htmlFor = "playlists"
+                    +"Choose a playlist:"
+                }
+                select {
+                    id = "playlistName"
+                    name = "playlistName"
+                    currentUserPlaylists.map { playlistName ->
+                        option {
+                            value = playlistName
+                            +playlistName
+                        }
                     }
                 }
                 input {

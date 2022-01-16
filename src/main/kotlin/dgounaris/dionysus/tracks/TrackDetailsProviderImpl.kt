@@ -1,12 +1,17 @@
 package dgounaris.dionysus.tracks
 
 import dgounaris.dionysus.clients.SpotifyClient
-import dgounaris.dionysus.tracks.models.Track
-import dgounaris.dionysus.tracks.models.TrackDetails
-import dgounaris.dionysus.tracks.models.TrackSection
+import dgounaris.dionysus.tracks.models.*
 
 class TrackDetailsProviderImpl(private val spotifyClient: SpotifyClient) : TrackDetailsProvider {
-    override fun getTrackDetails(track: Track) : TrackDetails {
+
+    override suspend fun getTrackAnalysis(trackId: String): TrackSections =
+        TrackSections(
+            trackId,
+            spotifyClient.getTrackAudioAnalysis(trackId).sections.map { TrackSectionStartEnd(it.start, it.start+it.duration) }
+        )
+
+    override suspend fun getTrackDetails(track: Track) : TrackDetails {
         val analysis = spotifyClient.getTrackAudioAnalysis(track.id)
         return TrackDetails(
             track.id,

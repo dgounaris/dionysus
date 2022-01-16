@@ -98,14 +98,32 @@ class SpotifyClientImpl : SpotifyClient {
             response.receive()
         }
 
-    override fun getTrackAudioAnalysis(trackId: String) : TrackAudioAnalysisResponseDto = runBlocking {
+    override suspend fun getTrackAudioAnalysis(trackId: String) : TrackAudioAnalysisResponseDto {
         val response : HttpResponse = httpClient.get("https://api.spotify.com/v1/audio-analysis/$trackId") {
             header("Authorization", "Bearer $accessToken")
             accept(ContentType.Application.Json)
         }
         if (response.status.value == 401) {
             refreshToken()
-            return@runBlocking getTrackAudioAnalysis(trackId)
+            return getTrackAudioAnalysis(trackId)
+        }
+        return response.receive()
+    }
+
+    override fun playPlaylistTrack(playlistId: String, trackId: String, positionMs: Int?): String = runBlocking {
+        val response : HttpResponse = httpClient.put("https://api.spotify.com/v1/me/player/play") {
+            header("Authorization", "Bearer $accessToken")
+            accept(ContentType.Application.Json)
+            contentType(ContentType.Application.Json)
+            body = StartPlaybackRequestDto(
+                "spotify:playlist:$playlistId",
+                Offset("spotify:track:$trackId"),
+                positionMs ?: 0
+            )
+        }
+        if (response.status.value == 401) {
+            refreshToken()
+            return@runBlocking playPlaylistTrack(playlistId, trackId, positionMs)
         }
         response.receive()
     }
