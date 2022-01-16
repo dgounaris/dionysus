@@ -117,6 +117,7 @@ class SpotifyClientImpl : SpotifyClient {
             contentType(ContentType.Application.Json)
             body = StartPlaybackRequestDto(
                 "spotify:playlist:$playlistId",
+                null,
                 Offset("spotify:track:$trackId"),
                 positionMs ?: 0
             )
