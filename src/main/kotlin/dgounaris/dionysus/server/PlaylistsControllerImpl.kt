@@ -91,6 +91,14 @@ class PlaylistsControllerImpl(
                     type = InputType.submit
                     value = "Submit"
                 }
+                br
+                +"OR"
+                br
+                input {
+                    type = InputType.submit
+                    value = "Autoplay using Dionysense"
+                    formAction = "http://localhost:8888/playback/play/auto"
+                }
             }
         }
     }

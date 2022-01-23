@@ -8,7 +8,10 @@ data class TrackDetails(
 
 data class TrackSection(
     val start : Double,
+    val duration: Double,
     val end : Double,
+    val confidence: Double,
+    val loudness: Double,
     val tempo : Double,
     val key : Int,
     val mode : Int,

@@ -1,8 +1,6 @@
 package dgounaris.dionysus.clients
 
-import dgounaris.dionysus.clients.models.CurrentUserPlaylistsResponseDto
-import dgounaris.dionysus.clients.models.PlaylistTracksResponseDto
-import dgounaris.dionysus.clients.models.TrackAudioAnalysisResponseDto
+import dgounaris.dionysus.clients.models.*
 
 interface SpotifyClient {
     fun getAuthorizeUrl() : String
@@ -12,6 +10,8 @@ interface SpotifyClient {
     fun getPlaylistTracks(playlistId: String) : PlaylistTracksResponseDto
     suspend fun getTrackAudioAnalysis(trackId: String) : TrackAudioAnalysisResponseDto
     fun playPlaylistTrack(playlistId: String, trackId: String, positionMs: Int? = null) : String
+    fun getTrack(trackId: String): TrackResponseDto
     fun playNext() : String
     fun seekPlaybackPosition(positionMs: Int) : String
+    fun getPlaybackState() : GetPlaybackStateResponseDto
 }

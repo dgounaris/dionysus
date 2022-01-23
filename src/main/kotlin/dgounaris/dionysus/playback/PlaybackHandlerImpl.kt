@@ -5,6 +5,7 @@ import dgounaris.dionysus.tracks.models.TrackSections
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlin.math.max
+import kotlin.math.min
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
 
@@ -32,7 +33,6 @@ class PlaybackHandlerImpl(
 
     private fun findSongSectionsToPlay(trackSections: TrackSections): List<Section> {
         val distinctOrderedSections = trackSections.sections
-            .distinctBy { section -> section.start }
             .sortedBy { section -> section.start }
             .map { section -> Section(
                 section.start, section.end
@@ -44,18 +44,19 @@ class PlaybackHandlerImpl(
         var previousSection = sections.firstOrNull() ?: return emptyList()
         val finalSectionList = mutableListOf(previousSection)
         for(index in 1 until sections.size) {
-            if (previousSection.end < sections[index].start - 0.1) { // -0.1 to tolerate arithmetic inaccuracies
-                finalSectionList.add(sections[index])
+            if (previousSection.end >= sections[index].start - 0.1) { // -0.1 to tolerate arithmetic inaccuracies
+                previousSection.start = min(previousSection.start, sections[index].start)
+                previousSection.end = max(previousSection.end, sections[index].end)
             } else {
-                finalSectionList.last().end = max(sections[index].end, finalSectionList.last().end)
+                finalSectionList.add(sections[index])
+                previousSection = finalSectionList.last()
             }
-            previousSection = sections[index]
         }
         return finalSectionList
     }
 }
 
 data class Section(
-    val start: Double,
+    var start: Double,
     var end: Double
 )

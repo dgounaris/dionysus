@@ -39,7 +39,7 @@ class SpotifyClientImpl : SpotifyClient {
     override fun getAuthorizeUrl(): String {
         return "https://accounts.spotify.com/authorize?response_type=code" +
                 "&client_id=$clientId" +
-                "&scope=user-read-private+user-read-email+playlist-read-private+user-modify-playback-state" +
+                "&scope=user-read-private+user-read-email+playlist-read-private+user-modify-playback-state+user-read-playback-state" +
                 "&redirect_uri=http%3A%2F%2Flocalhost%3A8888%2Fcallback"
     }
 
@@ -129,6 +129,18 @@ class SpotifyClientImpl : SpotifyClient {
         response.receive()
     }
 
+    override fun getTrack(trackId: String): TrackResponseDto = runBlocking {
+        val response : HttpResponse = httpClient.get("https://api.spotify.com/v1/tracks/$trackId") {
+            header("Authorization", "Bearer $accessToken")
+            accept(ContentType.Application.Json)
+        }
+        if (response.status.value == 401) {
+            refreshToken()
+            return@runBlocking getTrack(trackId)
+        }
+        response.receive()
+    }
+
     override fun playNext() : String = runBlocking {
         val response : HttpResponse = httpClient.post("https://api.spotify.com/v1/me/player/next") {
             header("Authorization", "Bearer $accessToken")
@@ -150,6 +162,18 @@ class SpotifyClientImpl : SpotifyClient {
         if (response.status.value == 401) {
             refreshToken()
             return@runBlocking seekPlaybackPosition(positionMs)
+        }
+        response.receive()
+    }
+
+    override fun getPlaybackState() : GetPlaybackStateResponseDto = runBlocking {
+        val response : HttpResponse = httpClient.put("https://api.spotify.com/v1/me/player") {
+            header("Authorization", "Bearer $accessToken")
+            accept(ContentType.Application.Json)
+        }
+        if (response.status.value == 401) {
+            refreshToken()
+            return@runBlocking getPlaybackState()
         }
         response.receive()
     }
