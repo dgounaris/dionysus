@@ -18,18 +18,18 @@ class FeedbackHandlerImpl(
             trackDetailsProvider.getTrackDetails(playbackState.item.id)
         }
         try {
-            val fileName = "C:\\Users\\dimit\\Documents\\repos\\dionysus_feedback\\${playbackState.item.id}-${UUID.randomUUID()}.txt"
+            val fileName = "C:\\Users\\dimit\\Documents\\repos\\dionysus\\dionysus_feedback\\${playbackState.item.id}-${UUID.randomUUID()}.txt"
             val file = File(fileName)
             file.createNewFile()
-            val writer = FileWriter(fileName)
-            writer.write(
-                """
+            FileWriter(fileName).use {
+                it.write(
+                    """
                     Track id: ${trackDetails.id}
                     Track name: ${trackDetails.name}
                     Track analysis: ${trackDetails.sections}
                 """.trimIndent()
-            )
-            writer.close()
+                )
+            }
         } catch (e: Exception) {
             println("Error while processing feedback: ${e.message}")
         }

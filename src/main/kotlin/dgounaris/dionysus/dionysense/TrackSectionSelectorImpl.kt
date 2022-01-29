@@ -2,7 +2,6 @@ package dgounaris.dionysus.dionysense
 
 import dgounaris.dionysus.tracks.TrackDetailsProvider
 import dgounaris.dionysus.tracks.models.TrackSection
-import dgounaris.dionysus.tracks.models.TrackSections
 
 class TrackSectionSelectorImpl(private val trackDetailsProvider: TrackDetailsProvider) : TrackSectionSelector {
 

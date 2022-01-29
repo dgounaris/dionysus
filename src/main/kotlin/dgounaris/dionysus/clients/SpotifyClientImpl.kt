@@ -1,13 +1,9 @@
 package dgounaris.dionysus.clients
 
 import com.fasterxml.jackson.databind.DeserializationFeature
-<<<<<<< HEAD
 import dgounaris.dionysus.clients.cache.Cache
 import dgounaris.dionysus.clients.models.*
 import dgounaris.dionysus.common.PropertiesProvider
-=======
-import dgounaris.dionysus.clients.models.*
->>>>>>> 723aa0e (Initial commit)
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.features.json.*
@@ -19,7 +15,9 @@ import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
 import java.util.*
 
-class SpotifyClientImpl : SpotifyClient {
+class SpotifyClientImpl(
+    private val cache: Cache
+) : SpotifyClient {
     private val clientId = PropertiesProvider.configuration.getProperty("spotifyClientId")
     private val clientSecret = PropertiesProvider.configuration.getProperty("spotifyClientSecret")
     private val httpClient = HttpClient {
@@ -167,7 +165,7 @@ class SpotifyClientImpl : SpotifyClient {
     }
 
     override fun getPlaybackState() : GetPlaybackStateResponseDto = runBlocking {
-        val response : HttpResponse = httpClient.put("https://api.spotify.com/v1/me/player") {
+        val response : HttpResponse = httpClient.get("https://api.spotify.com/v1/me/player") {
             header("Authorization", "Bearer $accessToken")
             accept(ContentType.Application.Json)
         }
