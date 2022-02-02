@@ -14,4 +14,5 @@ interface SpotifyClient {
     fun playNext() : String
     fun seekPlaybackPosition(positionMs: Int) : String
     fun getPlaybackState() : GetPlaybackStateResponseDto
+    fun setVolume(volumePercent: Int) : String
 }

@@ -14,11 +14,13 @@ class PersistentCache : Cache {
 
     override fun <T> get(key: String, clazz: Class<T>): T? {
         val fileName = ".\\dionysus_cache\\${key}.txt"
-        if (!File(fileName).exists()) {
+        val file = File(fileName)
+        if (!file.exists()) {
             return null
         }
         return FileReader(fileName).use {
             try {
+                println("Reading file ${file.name} from persistent cache")
                 jacksonSerializer.readValue(it.readText(), clazz)
             } catch (e: Exception) {
                 println("Error while trying to read $key from cache, $e")
@@ -34,6 +36,7 @@ class PersistentCache : Cache {
             val file = File(fileName)
             Files.createDirectories(Paths.get(directoryName))
             file.createNewFile()
+            println("Storing file ${file.name} to persistent cache")
             FileWriter(fileName).use {
                 // todo also write datetime?
                 it.write(

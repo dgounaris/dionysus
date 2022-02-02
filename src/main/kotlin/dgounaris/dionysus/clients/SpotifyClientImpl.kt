@@ -96,24 +96,18 @@ class SpotifyClientImpl(
             response.receive()
         }
 
-    override suspend fun getTrackAudioAnalysis(trackId: String) : TrackAudioAnalysisResponseDto {
-        val cacheKey = "trackAudioAnalysis_$trackId"
-        val cachedItem = cache.get(cacheKey, TrackAudioAnalysisResponseDto::class.java)
-        if (cachedItem != null) return cachedItem
-
-        val response : HttpResponse = httpClient.get("https://api.spotify.com/v1/audio-analysis/$trackId") {
-            header("Authorization", "Bearer $accessToken")
-            accept(ContentType.Application.Json)
+    override suspend fun getTrackAudioAnalysis(trackId: String) : TrackAudioAnalysisResponseDto =
+        executeWithCache("getTrackAudioAnalysis_$trackId") {
+            val response : HttpResponse = httpClient.get("https://api.spotify.com/v1/audio-analysis/$trackId") {
+                header("Authorization", "Bearer $accessToken")
+                accept(ContentType.Application.Json)
+            }
+            if (response.status.value == 401) {
+                refreshToken()
+                return getTrackAudioAnalysis(trackId)
+            }
+            response.receive()
         }
-        if (response.status.value == 401) {
-            refreshToken()
-            return getTrackAudioAnalysis(trackId)
-        }
-        return response.receive<TrackAudioAnalysisResponseDto>().let {
-            cache.store(cacheKey, it)
-            it
-        }
-    }
 
     override fun playPlaylistTrack(playlistId: String, trackId: String, positionMs: Int?): String = runBlocking {
         val response : HttpResponse = httpClient.put("https://api.spotify.com/v1/me/player/play") {
@@ -134,17 +128,20 @@ class SpotifyClientImpl(
         response.receive()
     }
 
-    override fun getTrack(trackId: String): TrackResponseDto = runBlocking {
-        val response : HttpResponse = httpClient.get("https://api.spotify.com/v1/tracks/$trackId") {
-            header("Authorization", "Bearer $accessToken")
-            accept(ContentType.Application.Json)
+    override fun getTrack(trackId: String): TrackResponseDto =
+        executeWithCache("getTrack_$trackId") {
+            runBlocking {
+                val response : HttpResponse = httpClient.get("https://api.spotify.com/v1/tracks/$trackId") {
+                    header("Authorization", "Bearer $accessToken")
+                    accept(ContentType.Application.Json)
+                }
+                if (response.status.value == 401) {
+                    refreshToken()
+                    return@runBlocking getTrack(trackId)
+                }
+                response.receive()
+            }
         }
-        if (response.status.value == 401) {
-            refreshToken()
-            return@runBlocking getTrack(trackId)
-        }
-        response.receive()
-    }
 
     override fun playNext() : String = runBlocking {
         val response : HttpResponse = httpClient.post("https://api.spotify.com/v1/me/player/next") {
@@ -181,5 +178,30 @@ class SpotifyClientImpl(
             return@runBlocking getPlaybackState()
         }
         response.receive()
+    }
+
+    override fun setVolume(volumePercent: Int) : String = runBlocking {
+        val response : HttpResponse = httpClient.put("https://api.spotify.com/v1/me/player/volume") {
+            header("Authorization", "Bearer $accessToken")
+            parameter("volume_percent", volumePercent)
+            accept(ContentType.Application.Json)
+        }
+        if (response.status.value == 401) {
+            refreshToken()
+            return@runBlocking setVolume(volumePercent)
+        }
+        response.receive()
+    }
+
+    private inline fun <reified T> executeWithCache(cacheKey: String, block: () -> T) : T {
+        val cachedItem = cacheKey.let {
+            cache.get(it, T::class.java)
+        }
+        if (cachedItem != null) {
+            return cachedItem
+        }
+        val response = block()
+        cache.store(cacheKey, response)
+        return response
     }
 }

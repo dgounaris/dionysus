@@ -13,21 +13,50 @@ class PlaybackHandlerImpl(
     private val spotifyClient: SpotifyClient
     ) : PlaybackHandler {
 
+    private val fadeMilliseconds = 1000
+    private val volumeChangeIntervalMilliseconds = 200
+
     override fun play(playlistId: String, tracksSections: List<TrackSections>) {
+        val playbackState = spotifyClient.getPlaybackState()
         tracksSections.forEach { trackSections ->
-            playNextSongSections(playlistId, trackSections)
+            playNextSongSections(playlistId, trackSections, playbackState.device.volume_percent)
         }
     }
 
-    private fun playNextSongSections(playlistId: String, trackSections: TrackSections) {
+    private fun playNextSongSections(playlistId: String, trackSections: TrackSections, baselineVolume: Int) {
         val sectionsToPlay = findSongSectionsToPlay(trackSections)
         sectionsToPlay.firstOrNull()?.apply {
-            spotifyClient.playPlaylistTrack(playlistId, trackSections.id, (this@apply.start * 1000).toInt())
-            runBlocking { delay((this@apply.end * 1000 - this@apply.start * 1000).roundToLong()) }
+            val startVolume = max(baselineVolume - 50, 0)
+            val effectiveStartTime = max((this@apply.start * 1000).toInt() - fadeMilliseconds, 0)
+            spotifyClient.playPlaylistTrack(playlistId, trackSections.id, effectiveStartTime)
+            runBlocking {
+                var timesVolumeChanged = 0
+                var currentVolume = startVolume
+                while (timesVolumeChanged < fadeMilliseconds/volumeChangeIntervalMilliseconds) {
+                    currentVolume += 10
+                    spotifyClient.setVolume(min(currentVolume, 100))
+                    delay(volumeChangeIntervalMilliseconds.toLong())
+                    timesVolumeChanged += 1
+                }
+                delay((this@apply.end * 1000 - this@apply.start * 1000).roundToLong())
+            }
         }
         sectionsToPlay.drop(1).forEach { sectionToPlay ->
             spotifyClient.seekPlaybackPosition((sectionToPlay.start * 1000).roundToInt())
-            runBlocking { delay((sectionToPlay.end * 1000 - sectionToPlay.start * 1000).roundToLong()) }
+            runBlocking {
+                delay((sectionToPlay.end * 1000 - sectionToPlay.start * 1000).roundToLong())
+            }
+        }
+        runBlocking {
+            var timesVolumeChanged = 0
+            var currentVolume = baselineVolume
+            while (timesVolumeChanged < fadeMilliseconds/volumeChangeIntervalMilliseconds) {
+                currentVolume -= 10
+                spotifyClient.setVolume(max(currentVolume, 0))
+                delay(volumeChangeIntervalMilliseconds.toLong())
+                timesVolumeChanged += 1
+            }
+            delay(volumeChangeIntervalMilliseconds.toLong())
         }
     }
 
