@@ -16,10 +16,11 @@ class TrackSectionSelectorImpl(private val trackDetailsProvider: TrackDetailsPro
             .also { selectedSections.add(it.second) }
 
         addSectionsForMinimumDuration(sections, pivotSection.first, pivotSection.second.duration)
+        val duration = sections.sumOf { it.duration }
 
         return selectedSections +
-                selectPreviousSections(sections, pivotSection.first - 1) +
-                selectSubsequentSections(sections, pivotSection.first + 1)
+                selectPreviousSections(sections, pivotSection.first - 1, duration) +
+                selectSubsequentSections(sections, pivotSection.first + 1, duration)
     }
 
     private fun addSectionsForMinimumDuration(sections: List<TrackSection>, indexToOptionallyAdd: Int, totalDuration: Double) : List<TrackSection> {
@@ -27,7 +28,7 @@ class TrackSectionSelectorImpl(private val trackDetailsProvider: TrackDetailsPro
             return emptyList()
         }
 
-        return if (totalDuration <= 40) {
+        return if (totalDuration <= 40 ) {
             addSectionsForMinimumDuration(
                 sections,
                 indexToOptionallyAdd - 1,
@@ -38,19 +39,19 @@ class TrackSectionSelectorImpl(private val trackDetailsProvider: TrackDetailsPro
         }
     }
 
-    private fun selectPreviousSections(sections: List<TrackSection>, evaluatedIndex: Int): List<TrackSection> {
-        if (evaluatedIndex < 0 || evaluatedIndex > sections.size - 1 || sections[evaluatedIndex].confidence > 0.7) {
+    private fun selectPreviousSections(sections: List<TrackSection>, evaluatedIndex: Int, duration: Double): List<TrackSection> {
+        if (evaluatedIndex < 0 || evaluatedIndex > sections.size - 1 || sections[evaluatedIndex].confidence > 0.7 || duration >= 50) {
             return emptyList()
         }
         return listOf(sections[evaluatedIndex]) +
-                selectPreviousSections(sections, evaluatedIndex - 1)
+                selectPreviousSections(sections, evaluatedIndex - 1, duration + sections[evaluatedIndex].duration)
     }
 
-    private fun selectSubsequentSections(sections: List<TrackSection>, evaluatedIndex: Int): List<TrackSection> {
-        if (evaluatedIndex < 0 || evaluatedIndex > sections.size - 1 || sections[evaluatedIndex].confidence > 0.7) {
+    private fun selectSubsequentSections(sections: List<TrackSection>, evaluatedIndex: Int, duration: Double): List<TrackSection> {
+        if (evaluatedIndex < 0 || evaluatedIndex > sections.size - 1 || sections[evaluatedIndex].confidence > 0.7 || duration >= 50) {
             return emptyList()
         }
         return listOf(sections[evaluatedIndex]) +
-                selectSubsequentSections(sections, evaluatedIndex + 1)
+                selectSubsequentSections(sections, evaluatedIndex + 1, duration + sections[evaluatedIndex].duration)
     }
 }
