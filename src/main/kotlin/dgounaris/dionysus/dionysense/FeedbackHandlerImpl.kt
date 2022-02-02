@@ -18,7 +18,7 @@ class FeedbackHandlerImpl(
             trackDetailsProvider.getTrackDetails(playbackState.item.id)
         }
         try {
-            val fileName = "C:\\Users\\dimit\\Documents\\repos\\dionysus\\dionysus_feedback\\${playbackState.item.id}-${UUID.randomUUID()}.txt"
+            val fileName = ".\\dionysus_feedback\\${playbackState.item.id}-${UUID.randomUUID()}.txt"
             val file = File(fileName)
             file.createNewFile()
             FileWriter(fileName).use {

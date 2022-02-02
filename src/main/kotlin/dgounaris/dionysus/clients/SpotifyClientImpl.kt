@@ -97,6 +97,10 @@ class SpotifyClientImpl(
         }
 
     override suspend fun getTrackAudioAnalysis(trackId: String) : TrackAudioAnalysisResponseDto {
+        val cacheKey = "trackAudioAnalysis_$trackId"
+        val cachedItem = cache.get(cacheKey, TrackAudioAnalysisResponseDto::class.java)
+        if (cachedItem != null) return cachedItem
+
         val response : HttpResponse = httpClient.get("https://api.spotify.com/v1/audio-analysis/$trackId") {
             header("Authorization", "Bearer $accessToken")
             accept(ContentType.Application.Json)
@@ -105,7 +109,10 @@ class SpotifyClientImpl(
             refreshToken()
             return getTrackAudioAnalysis(trackId)
         }
-        return response.receive()
+        return response.receive<TrackAudioAnalysisResponseDto>().let {
+            cache.store(cacheKey, it)
+            it
+        }
     }
 
     override fun playPlaylistTrack(playlistId: String, trackId: String, positionMs: Int?): String = runBlocking {
