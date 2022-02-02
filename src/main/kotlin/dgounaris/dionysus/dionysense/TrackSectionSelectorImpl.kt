@@ -40,7 +40,7 @@ class TrackSectionSelectorImpl(private val trackDetailsProvider: TrackDetailsPro
     }
 
     private fun selectPreviousSections(sections: List<TrackSection>, evaluatedIndex: Int, duration: Double): List<TrackSection> {
-        if (evaluatedIndex < 0 || evaluatedIndex > sections.size - 1 || sections[evaluatedIndex].confidence > 0.7 || duration >= 50) {
+        if (evaluatedIndex < 0 || evaluatedIndex > sections.size - 1 || sections[evaluatedIndex].confidence > 0.7 || duration >= 60) {
             return emptyList()
         }
         return listOf(sections[evaluatedIndex]) +
@@ -48,7 +48,7 @@ class TrackSectionSelectorImpl(private val trackDetailsProvider: TrackDetailsPro
     }
 
     private fun selectSubsequentSections(sections: List<TrackSection>, evaluatedIndex: Int, duration: Double): List<TrackSection> {
-        if (evaluatedIndex < 0 || evaluatedIndex > sections.size - 1 || sections[evaluatedIndex].confidence > 0.7 || duration >= 50) {
+        if (evaluatedIndex < 0 || evaluatedIndex > sections.size - 1 || sections[evaluatedIndex].confidence > 0.7 || duration >= 60) {
             return emptyList()
         }
         return listOf(sections[evaluatedIndex]) +

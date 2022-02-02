@@ -5,6 +5,8 @@ import dgounaris.dionysus.tracks.TrackDetailsProvider
 import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.io.FileWriter
+import java.nio.file.Files
+import java.nio.file.Paths
 import java.util.*
 
 class FeedbackHandlerImpl(
@@ -18,8 +20,10 @@ class FeedbackHandlerImpl(
             trackDetailsProvider.getTrackDetails(playbackState.item.id)
         }
         try {
+            val directoryName = ".\\dionysus_feedback\\"
             val fileName = ".\\dionysus_feedback\\${playbackState.item.id}-${UUID.randomUUID()}.txt"
             val file = File(fileName)
+            Files.createDirectories(Paths.get(directoryName))
             file.createNewFile()
             FileWriter(fileName).use {
                 it.write(

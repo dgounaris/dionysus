@@ -13,8 +13,8 @@ class PlaybackHandlerImpl(
     private val spotifyClient: SpotifyClient
     ) : PlaybackHandler {
 
-    private val fadeMilliseconds = 1000
-    private val volumeChangeIntervalMilliseconds = 200
+    private val fadeMilliseconds = 400
+    private val volumeChangeIntervalMilliseconds = 100
 
     override fun play(playlistId: String, tracksSections: List<TrackSections>) {
         val playbackState = spotifyClient.getPlaybackState()
@@ -28,12 +28,15 @@ class PlaybackHandlerImpl(
         sectionsToPlay.firstOrNull()?.apply {
             val startVolume = max(baselineVolume - 50, 0)
             val effectiveStartTime = max((this@apply.start * 1000).toInt() - fadeMilliseconds, 0)
+            // todo extract volume altering logic to other class, because we might have different impls
+            // todo exponential volume change
+            spotifyClient.setVolume(startVolume)
             spotifyClient.playPlaylistTrack(playlistId, trackSections.id, effectiveStartTime)
             runBlocking {
                 var timesVolumeChanged = 0
                 var currentVolume = startVolume
                 while (timesVolumeChanged < fadeMilliseconds/volumeChangeIntervalMilliseconds) {
-                    currentVolume += 10
+                    currentVolume += (50/(fadeMilliseconds/volumeChangeIntervalMilliseconds))
                     spotifyClient.setVolume(min(currentVolume, 100))
                     delay(volumeChangeIntervalMilliseconds.toLong())
                     timesVolumeChanged += 1
@@ -51,7 +54,7 @@ class PlaybackHandlerImpl(
             var timesVolumeChanged = 0
             var currentVolume = baselineVolume
             while (timesVolumeChanged < fadeMilliseconds/volumeChangeIntervalMilliseconds) {
-                currentVolume -= 10
+                currentVolume -= (50/(fadeMilliseconds/volumeChangeIntervalMilliseconds))
                 spotifyClient.setVolume(max(currentVolume, 0))
                 delay(volumeChangeIntervalMilliseconds.toLong())
                 timesVolumeChanged += 1
