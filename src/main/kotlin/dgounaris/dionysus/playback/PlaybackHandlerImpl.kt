@@ -10,7 +10,8 @@ import kotlin.math.roundToInt
 import kotlin.math.roundToLong
 
 class PlaybackHandlerImpl(
-    private val spotifyClient: SpotifyClient
+    private val spotifyClient: SpotifyClient,
+    private val playbackVolumeAdjuster: PlaybackVolumeAdjuster
     ) : PlaybackHandler {
 
     private val fadeMilliseconds = 400
@@ -26,21 +27,13 @@ class PlaybackHandlerImpl(
     private fun playNextSongSections(playlistId: String, trackSections: TrackSections, baselineVolume: Int) {
         val sectionsToPlay = findSongSectionsToPlay(trackSections)
         sectionsToPlay.firstOrNull()?.apply {
-            val startVolume = max(baselineVolume - 50, 0)
             val effectiveStartTime = max((this@apply.start * 1000).toInt() - fadeMilliseconds, 0)
             // todo extract volume altering logic to other class, because we might have different impls
             // todo exponential volume change
-            spotifyClient.setVolume(startVolume)
+            playbackVolumeAdjuster.prepareFadeIn(baselineVolume)
             spotifyClient.playPlaylistTrack(playlistId, trackSections.id, effectiveStartTime)
+            playbackVolumeAdjuster.fadeIn(baselineVolume)
             runBlocking {
-                var timesVolumeChanged = 0
-                var currentVolume = startVolume
-                while (timesVolumeChanged < fadeMilliseconds/volumeChangeIntervalMilliseconds) {
-                    currentVolume += (50/(fadeMilliseconds/volumeChangeIntervalMilliseconds))
-                    spotifyClient.setVolume(min(currentVolume, 100))
-                    delay(volumeChangeIntervalMilliseconds.toLong())
-                    timesVolumeChanged += 1
-                }
                 delay((this@apply.end * 1000 - this@apply.start * 1000).roundToLong())
             }
         }
@@ -50,17 +43,7 @@ class PlaybackHandlerImpl(
                 delay((sectionToPlay.end * 1000 - sectionToPlay.start * 1000).roundToLong())
             }
         }
-        runBlocking {
-            var timesVolumeChanged = 0
-            var currentVolume = baselineVolume
-            while (timesVolumeChanged < fadeMilliseconds/volumeChangeIntervalMilliseconds) {
-                currentVolume -= (50/(fadeMilliseconds/volumeChangeIntervalMilliseconds))
-                spotifyClient.setVolume(max(currentVolume, 0))
-                delay(volumeChangeIntervalMilliseconds.toLong())
-                timesVolumeChanged += 1
-            }
-            delay(volumeChangeIntervalMilliseconds.toLong())
-        }
+        playbackVolumeAdjuster.fadeOut(baselineVolume)
     }
 
     private fun findSongSectionsToPlay(trackSections: TrackSections): List<Section> {

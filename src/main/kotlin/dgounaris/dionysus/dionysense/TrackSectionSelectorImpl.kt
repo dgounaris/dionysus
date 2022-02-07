@@ -16,11 +16,15 @@ class TrackSectionSelectorImpl(private val trackDetailsProvider: TrackDetailsPro
             .also { selectedSections.add(it.second) }
 
         addSectionsForMinimumDuration(sections, pivotSection.first, pivotSection.second.duration)
-        val duration = sections.sumOf { it.duration }
+        val duration = selectedSections.sumOf { it.duration }
 
-        return selectedSections +
+        selectedSections.addAll(
                 selectPreviousSections(sections, pivotSection.first - 1, duration) +
-                selectSubsequentSections(sections, pivotSection.first + 1, duration)
+                selectSubsequentSections(sections, pivotSection.first + 1, duration))
+
+        println("Dionysense TrackSelection: TrackId: $trackId, Sections: ${selectedSections.joinToString(" ") { "[${it.start}-${it.end}]" }}")
+
+        return selectedSections
     }
 
     private fun addSectionsForMinimumDuration(sections: List<TrackSection>, indexToOptionallyAdd: Int, totalDuration: Double) : List<TrackSection> {
