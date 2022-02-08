@@ -18,13 +18,31 @@ class AudioLineRecorder {
             return
         }
         val line = AudioSystem.getLine(info) as TargetDataLine
-        val recorded = ByteArray(48000 * 2 * 4) // 4 seconds
+        val recorded = ByteArray(48000 * 4 * 4) // 4 seconds
+        val data = ByteArray(line.bufferSize)
+        val out = ByteArrayOutputStream()
         line.use {
             line.open(format)
             line.start()
             //line.write(recorded, 0, 48000 * 2 * 4)
-            println("Start capturing")
-            AudioSystem.write(AudioInputStream(line), AudioFileFormat.Type.WAVE, File("./abc.wav"))
+            val executor = Executors.newSingleThreadExecutor()
+            executor.invokeAll(
+                listOf(Callable {
+                    println("Start capturing")
+                    while (true) {
+                        val numBytesRead = line.read(data, 0, data.size)
+                        if (numBytesRead == -1) break
+                        out.write(data, 0, numBytesRead)
+                    }
+                    AudioSystem.write(AudioInputStream(ByteArrayInputStream(out.toByteArray()), format, out.size() / format.frameSize.toLong()), AudioFileFormat.Type.WAVE, File("./abc.wav"))
+                }),
+                millisToRecord,
+                TimeUnit.MILLISECONDS
+            )
+
+            //println("Start capturing")
+            //AudioSystem.write(AudioInputStream(line), AudioFileFormat.Type.WAVE, File("./abc.wav"))
+            AudioSystem.write(AudioInputStream(ByteArrayInputStream(out.toByteArray()), format, out.size() / format.frameSize.toLong()), AudioFileFormat.Type.WAVE, File("./abc.wav"))
         }
     }
 
