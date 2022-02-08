@@ -11,7 +11,7 @@ class EchoFilterTests {
     fun aTest() {
         val sound = SimpleSoundPlayer("C:\\Users\\dimit\\Documents\\repos\\dionysus\\src\\test\\kotlin\\audio\\file_example_WAV_1MG.wav")
         val inputStream = ByteArrayInputStream(sound.samples)
-        val filter = EchoFilter(11025, .6f)
+        val filter = EchoFilter(4000, .8f)
         val filteredInputStream = FilteredSoundStream(inputStream, filter)
         sound.play(filteredInputStream)
     }

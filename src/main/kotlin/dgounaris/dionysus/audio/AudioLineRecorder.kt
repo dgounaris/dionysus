@@ -8,14 +8,35 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import javax.sound.sampled.*
 
+
 class AudioLineRecorder {
     fun record(millisToRecord: Long) {
-        val mixers = AudioSystem.getMixerInfo()
-        val line = getAudioLine(mixers.first { it.name.startsWith("Headphones") }) // todo parameterize this
-        line.use {
-            openLine(it)
-            recordLine(it, millisToRecord)
+        val format = getAudioFormat()
+        val info = DataLine.Info(TargetDataLine::class.java, format)
+        if (!AudioSystem.isLineSupported(info)) {
+            println("Line not supported")
+            return
         }
+        val line = AudioSystem.getLine(info) as TargetDataLine
+        val recorded = ByteArray(48000 * 2 * 4) // 4 seconds
+        line.use {
+            line.open(format)
+            line.start()
+            //line.write(recorded, 0, 48000 * 2 * 4)
+            println("Start capturing")
+            AudioSystem.write(AudioInputStream(line), AudioFileFormat.Type.WAVE, File("./abc.wav"))
+        }
+    }
+
+    private fun getAudioFormat(): AudioFormat {
+        val sampleRate = 48000f
+        val sampleSizeInBits = 16
+        val channels = 2
+        val signed = true
+        val bigEndian = false
+        return AudioFormat(
+            sampleRate, sampleSizeInBits, channels, signed, bigEndian
+        )
     }
 
     private fun getAudioLine(mixerInfo: Mixer.Info) =

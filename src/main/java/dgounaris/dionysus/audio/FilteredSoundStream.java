@@ -33,10 +33,19 @@ public class FilteredSoundStream extends FilterInputStream {
     {
         // read and filter the sound samples in the stream
         int bytesRead = super.read(samples, offset, length);
+        super.mark(12000);
         if (bytesRead > 0) {
-            soundFilter.filter(samples, offset, bytesRead);
+            // todo the peek should not be responsibility of this if we want to keep it extendable
+            byte[] peekedBytes = new byte[12000];
+            //soundFilter.filter(samples, offset, bytesRead);
+            int peekedBytesCount = super.read(peekedBytes, 0, 12000);
+            if (peekedBytesCount < 12000) {
+                soundFilter.filter(samples, offset, bytesRead);
+            }
+            super.reset();
             return bytesRead;
         }
+        super.reset();
         // if there are no remaining bytes in the sound stream,
         // check if the filter has any remaining bytes ("echoes").
         if (remainingSize == REMAINING_SIZE_UNKNOWN) {
