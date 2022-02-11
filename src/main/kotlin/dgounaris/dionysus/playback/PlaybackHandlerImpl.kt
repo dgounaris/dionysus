@@ -14,8 +14,7 @@ class PlaybackHandlerImpl(
     private val playbackVolumeAdjuster: PlaybackVolumeAdjuster
     ) : PlaybackHandler {
 
-    private val fadeMilliseconds = 400
-    private val volumeChangeIntervalMilliseconds = 100
+    private val fadeMilliseconds = 300
 
     override fun play(playlistId: String, tracksSections: List<TrackSections>) {
         val playbackState = spotifyClient.getPlaybackState()
@@ -28,8 +27,6 @@ class PlaybackHandlerImpl(
         val sectionsToPlay = findSongSectionsToPlay(trackSections)
         sectionsToPlay.firstOrNull()?.apply {
             val effectiveStartTime = max((this@apply.start * 1000).toInt() - fadeMilliseconds, 0)
-            // todo extract volume altering logic to other class, because we might have different impls
-            // todo exponential volume change
             playbackVolumeAdjuster.prepareFadeIn(baselineVolume)
             spotifyClient.playPlaylistTrack(playlistId, trackSections.id, effectiveStartTime)
             playbackVolumeAdjuster.fadeIn(baselineVolume)

@@ -12,12 +12,14 @@ import javax.sound.sampled.*
 class AudioLineRecorder {
     fun record(millisToRecord: Long) {
         val format = getAudioFormat()
-        val info = DataLine.Info(TargetDataLine::class.java, format)
+        val info = DataLine.Info(SourceDataLine::class.java, format)
         if (!AudioSystem.isLineSupported(info)) {
             println("Line not supported")
             return
         }
-        val line = AudioSystem.getLine(info) as TargetDataLine
+        val mixerInfos = AudioSystem.getMixerInfo()
+        val mixer = AudioSystem.getMixer(mixerInfos[4])
+        val line = AudioSystem.getLine(mixer.sourceLineInfo[0]) as SourceDataLine
         val recorded = ByteArray(48000 * 4 * 4) // 4 seconds
         val data = ByteArray(line.bufferSize)
         val out = ByteArrayOutputStream()
@@ -30,7 +32,7 @@ class AudioLineRecorder {
                 listOf(Callable {
                     println("Start capturing")
                     while (true) {
-                        val numBytesRead = line.read(data, 0, data.size)
+                        val numBytesRead = line.write(data, 0, data.size)
                         if (numBytesRead == -1) break
                         out.write(data, 0, numBytesRead)
                     }
@@ -47,7 +49,7 @@ class AudioLineRecorder {
     }
 
     private fun getAudioFormat(): AudioFormat {
-        val sampleRate = 48000f
+        val sampleRate = 44100f
         val sampleSizeInBits = 16
         val channels = 2
         val signed = true

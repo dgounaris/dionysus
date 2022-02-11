@@ -15,7 +15,7 @@ class TrackSectionSelectorImpl(private val trackDetailsProvider: TrackDetailsPro
             .firstOrNull { it.second.confidence > 0.5 } ?: return emptyList())
             .also { selectedSections.add(it.second) }
 
-        addSectionsForMinimumDuration(sections, pivotSection.first, pivotSection.second.duration)
+        selectedSections.addAll(getSectionsForMinimumDuration(sections, pivotSection.first-1, pivotSection.second.duration))
         val duration = selectedSections.sumOf { it.duration }
 
         selectedSections.addAll(
@@ -27,13 +27,13 @@ class TrackSectionSelectorImpl(private val trackDetailsProvider: TrackDetailsPro
         return selectedSections
     }
 
-    private fun addSectionsForMinimumDuration(sections: List<TrackSection>, indexToOptionallyAdd: Int, totalDuration: Double) : List<TrackSection> {
+    private fun getSectionsForMinimumDuration(sections: List<TrackSection>, indexToOptionallyAdd: Int, totalDuration: Double) : List<TrackSection> {
         if (indexToOptionallyAdd < 0 || indexToOptionallyAdd > sections.size - 1) {
             return emptyList()
         }
 
         return if (totalDuration <= 40 ) {
-            addSectionsForMinimumDuration(
+            getSectionsForMinimumDuration(
                 sections,
                 indexToOptionallyAdd - 1,
                 totalDuration + sections[indexToOptionallyAdd].duration
