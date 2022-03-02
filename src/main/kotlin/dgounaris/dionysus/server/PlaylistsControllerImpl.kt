@@ -1,6 +1,8 @@
 package dgounaris.dionysus.server
 
 import dgounaris.dionysus.common.parallelMap
+import dgounaris.dionysus.playback.PlaybackHandler
+import dgounaris.dionysus.playback.PlaybackHandlerImpl
 import dgounaris.dionysus.playlists.PlaylistDetailsProvider
 import dgounaris.dionysus.tracks.TrackDetailsProvider
 import dgounaris.dionysus.tracks.models.TrackDetails
@@ -16,6 +18,7 @@ import kotlinx.html.dom.document
 
 class PlaylistsControllerImpl(
     private var playlistDetailsProvider: PlaylistDetailsProvider,
+    private val playbackHandler: PlaybackHandler,
     private val trackDetailsProvider: TrackDetailsProvider
     ) : PlaylistsController {
     override fun configureRouting(application: Application) {
@@ -42,6 +45,7 @@ class PlaylistsControllerImpl(
         val playlistResponse = PlaylistResponseDto(
             playlist.name, playlist.id, playlistTrackDetails
         )
+        val availablePlaybackDevices = playbackHandler.getAvailableDevices()
         html.body {
             p {
                 +"Playlist $playlistName"
@@ -87,6 +91,21 @@ class PlaylistsControllerImpl(
                         br
                     }
                 }
+                label {
+                    htmlFor = "devices_select"
+                    text("Choose a playback device:")
+                }
+                select {
+                    name = "device_select"
+                    id = "devices_select"
+                    availablePlaybackDevices.map {
+                        option {
+                            value = it.id
+                            + ("${it.name} (${it.type})")
+                        }
+                    }
+                }
+                br
                 input {
                     type = InputType.submit
                     value = "Submit"

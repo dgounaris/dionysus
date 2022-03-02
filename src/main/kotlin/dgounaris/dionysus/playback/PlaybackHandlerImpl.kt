@@ -15,7 +15,7 @@ class PlaybackHandlerImpl(
     private val playbackVolumeAdjuster: PlaybackVolumeAdjuster
     ) : PlaybackHandler {
 
-    private val fadeMilliseconds = 300
+    private val fadeMilliseconds = playbackVolumeAdjuster.getFadeMilliseconds()
 
     override fun getAvailableDevices() : List<AvailableDevice> {
         val availableDevices = spotifyClient.getAvailableDevices()
@@ -24,19 +24,19 @@ class PlaybackHandlerImpl(
             .toList()
     }
 
-    override fun play(playlistId: String, tracksSections: List<TrackSections>) {
+    override fun play(playlistId: String, tracksSections: List<TrackSections>, deviceId: String) {
         val playbackState = spotifyClient.getPlaybackState()
         tracksSections.forEach { trackSections ->
-            playNextSongSections(playlistId, trackSections, playbackState.device.volume_percent)
+            playNextSongSections(playlistId, trackSections, playbackState.device.volume_percent, deviceId)
         }
     }
 
-    private fun playNextSongSections(playlistId: String, trackSections: TrackSections, baselineVolume: Int) {
+    private fun playNextSongSections(playlistId: String, trackSections: TrackSections, baselineVolume: Int, deviceId: String) {
         val sectionsToPlay = findSongSectionsToPlay(trackSections)
         sectionsToPlay.firstOrNull()?.apply {
             val effectiveStartTime = max((this@apply.start * 1000).toInt() - fadeMilliseconds, 0)
             playbackVolumeAdjuster.prepareFadeIn(baselineVolume)
-            spotifyClient.playPlaylistTrack(playlistId, trackSections.id, effectiveStartTime)
+            spotifyClient.playPlaylistTrack(playlistId, trackSections.id, deviceId, effectiveStartTime)
             playbackVolumeAdjuster.fadeIn(baselineVolume)
             runBlocking {
                 delay((this@apply.end * 1000 - this@apply.start * 1000).roundToLong())

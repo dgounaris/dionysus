@@ -40,6 +40,7 @@ class PlaybackControllerImpl(
     }
 
     private fun autoplay(params: Parameters) {
+        val targetDeviceId = params.entries().single { it.key == "device_select" }.value.single()
         val targetTracks = params.entries()
             .filter { entry -> entry.key.startsWith("trackSection_") }
             .map { it.key.substringAfter("trackSection_") }
@@ -51,10 +52,11 @@ class PlaybackControllerImpl(
                 }
         }
         val playlistId = params.entries().first { entry -> entry.key.startsWith("playlistId") }.value.first()
-        playbackHandler.play(playlistId, targetSections)
+        playbackHandler.play(playlistId, targetSections, targetDeviceId)
     }
 
     private fun play(params: Parameters) {
+        val targetDeviceId = params.entries().single { it.key == "device_select" }.value.single()
         val targetSections = params.entries()
             .filter { entry -> entry.key.startsWith("trackSection_") }
             .map { entry ->
@@ -70,7 +72,7 @@ class PlaybackControllerImpl(
                 )
             }
         val playlistId = params.entries().first { entry -> entry.key.startsWith("playlistId") }.value.first()
-        playbackHandler.play(playlistId, targetSections)
+        playbackHandler.play(playlistId, targetSections, targetDeviceId)
     }
 
     private fun submitFeedback() {

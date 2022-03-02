@@ -4,6 +4,8 @@ import dgounaris.dionysus.tracks.TrackDetailsProvider
 import dgounaris.dionysus.tracks.models.TrackSection
 
 class TrackSectionSelectorImpl(private val trackDetailsProvider: TrackDetailsProvider) : TrackSectionSelector {
+    private val minTotalDuration = 40
+    private val maxTotalDuration = 100
 
     override suspend fun selectSections(trackId: String) : List<TrackSection> {
         val sections = trackDetailsProvider.getTrackAnalysis(trackId)
@@ -44,7 +46,7 @@ class TrackSectionSelectorImpl(private val trackDetailsProvider: TrackDetailsPro
     }
 
     private fun selectPreviousSections(sections: List<TrackSection>, evaluatedIndex: Int, duration: Double): List<TrackSection> {
-        if (evaluatedIndex < 0 || evaluatedIndex > sections.size - 1 || sections[evaluatedIndex].confidence > 0.7 || duration >= 60) {
+        if (evaluatedIndex < 0 || evaluatedIndex > sections.size - 1 || sections[evaluatedIndex].confidence > 0.7 || duration >= maxTotalDuration) {
             return emptyList()
         }
         return listOf(sections[evaluatedIndex]) +
@@ -52,7 +54,7 @@ class TrackSectionSelectorImpl(private val trackDetailsProvider: TrackDetailsPro
     }
 
     private fun selectSubsequentSections(sections: List<TrackSection>, evaluatedIndex: Int, duration: Double): List<TrackSection> {
-        if (evaluatedIndex < 0 || evaluatedIndex > sections.size - 1 || sections[evaluatedIndex].confidence > 0.7 || duration >= 60) {
+        if (evaluatedIndex < 0 || evaluatedIndex > sections.size - 1 || sections[evaluatedIndex].confidence > 0.7 || duration >= maxTotalDuration) {
             return emptyList()
         }
         return listOf(sections[evaluatedIndex]) +
