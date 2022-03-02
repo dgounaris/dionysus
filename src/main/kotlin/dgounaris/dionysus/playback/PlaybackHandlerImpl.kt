@@ -1,6 +1,7 @@
 package dgounaris.dionysus.playback
 
 import dgounaris.dionysus.clients.SpotifyClient
+import dgounaris.dionysus.playback.models.AvailableDevice
 import dgounaris.dionysus.tracks.models.TrackSections
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
@@ -15,6 +16,13 @@ class PlaybackHandlerImpl(
     ) : PlaybackHandler {
 
     private val fadeMilliseconds = 300
+
+    override fun getAvailableDevices() : List<AvailableDevice> {
+        val availableDevices = spotifyClient.getAvailableDevices()
+        return availableDevices.devices
+            .map { device -> AvailableDevice(device.id, device.name, device.type, device.is_active) }
+            .toList()
+    }
 
     override fun play(playlistId: String, tracksSections: List<TrackSections>) {
         val playbackState = spotifyClient.getPlaybackState()

@@ -193,6 +193,18 @@ class SpotifyClientImpl(
         response.receive()
     }
 
+    override fun getAvailableDevices(): GetAvailableDevicesResponseDto = runBlocking {
+        val response : HttpResponse = httpClient.get("https://api.spotify.com/v1/me/player/devices") {
+            header("Authorization", "Bearer $accessToken")
+            accept(ContentType.Application.Json)
+        }
+        if (response.status.value == 401) {
+            refreshToken()
+            return@runBlocking getAvailableDevices()
+        }
+        response.receive()
+    }
+
     private inline fun <reified T> executeWithCache(cacheKey: String, block: () -> T) : T {
         val cachedItem = cacheKey.let {
             cache.get(it, T::class.java)

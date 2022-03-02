@@ -6,13 +6,15 @@ import kotlinx.coroutines.runBlocking
 import kotlin.math.max
 import kotlin.math.min
 
-class PlaybackVolumeAdjusterImpl(
+class LinearPlaybackVolumeAdjuster(
     private val spotifyClient: SpotifyClient
     ) : PlaybackVolumeAdjuster {
 
-    private val fadeMilliseconds = 300
-    private val volumeChangeIntervalMilliseconds = 100
+    private val fadeMilliseconds = 200
+    private val volumeChangeIntervalMilliseconds = 20
     private val volumeReduction = 30
+
+    override fun getFadeMilliseconds(): Int = fadeMilliseconds
 
     override fun fadeOut(baselineVolume: Int) {
         runBlocking {

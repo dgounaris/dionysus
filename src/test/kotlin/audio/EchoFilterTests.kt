@@ -5,6 +5,9 @@ import dgounaris.dionysus.audio.FilteredSoundStream
 import dgounaris.dionysus.audio.SimpleSoundPlayer
 import org.junit.jupiter.api.Test
 import java.io.ByteArrayInputStream
+import javax.sound.midi.MidiChannel
+import javax.sound.sampled.AudioInputStream
+import javax.sound.sampled.AudioSystem
 
 class EchoFilterTests {
     @Test
