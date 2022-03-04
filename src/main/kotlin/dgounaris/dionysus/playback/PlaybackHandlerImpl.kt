@@ -2,6 +2,8 @@ package dgounaris.dionysus.playback
 
 import dgounaris.dionysus.clients.SpotifyClient
 import dgounaris.dionysus.playback.models.AvailableDevice
+import dgounaris.dionysus.tracks.models.TrackSection
+import dgounaris.dionysus.tracks.models.TrackSectionStartEnd
 import dgounaris.dionysus.tracks.models.TrackSections
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
@@ -25,15 +27,15 @@ class PlaybackHandlerImpl(
     }
 
     override fun play(playlistId: String, tracksSections: List<TrackSections>, deviceId: String) {
+        val mergedTrackSections = tracksSections.map { findSongSectionsToPlay(it) }
         val playbackState = spotifyClient.getPlaybackState()
-        tracksSections.forEach { trackSections ->
-            playNextSongSections(playlistId, trackSections, playbackState.device.volume_percent, deviceId)
+        mergedTrackSections.forEach { mergedTrackSection ->
+            playNextSongSections(playlistId, mergedTrackSection, playbackState.device.volume_percent, deviceId)
         }
     }
 
     private fun playNextSongSections(playlistId: String, trackSections: TrackSections, baselineVolume: Int, deviceId: String) {
-        val sectionsToPlay = findSongSectionsToPlay(trackSections)
-        sectionsToPlay.firstOrNull()?.apply {
+        trackSections.sections.firstOrNull()?.apply {
             val effectiveStartTime = max((this@apply.start * 1000).toInt() - fadeMilliseconds, 0)
             playbackVolumeAdjuster.prepareFadeIn(baselineVolume)
             spotifyClient.playPlaylistTrack(playlistId, trackSections.id, deviceId, effectiveStartTime)
@@ -42,25 +44,25 @@ class PlaybackHandlerImpl(
                 delay((this@apply.end * 1000 - this@apply.start * 1000).roundToLong())
             }
         }
-        sectionsToPlay.drop(1).forEach { sectionToPlay ->
+        trackSections.sections.drop(1).forEach { sectionToPlay ->
             spotifyClient.seekPlaybackPosition((sectionToPlay.start * 1000).roundToInt())
             runBlocking {
-                delay((sectionToPlay.end * 1000 - sectionToPlay.start * 1000).roundToLong())
+                delay((sectionToPlay.end * 1000 - sectionToPlay.start * 1000 - fadeMilliseconds).roundToLong())
             }
         }
         playbackVolumeAdjuster.fadeOut(baselineVolume)
     }
 
-    private fun findSongSectionsToPlay(trackSections: TrackSections): List<Section> {
+    private fun findSongSectionsToPlay(trackSections: TrackSections): TrackSections {
         val distinctOrderedSections = trackSections.sections
             .sortedBy { section -> section.start }
-            .map { section -> Section(
+            .map { section -> TrackSectionStartEnd(
                 section.start, section.end
             ) }
-        return mergeAdjacentSections(distinctOrderedSections)
+        return TrackSections(trackSections.id, mergeAdjacentSections(distinctOrderedSections))
     }
 
-    private fun mergeAdjacentSections(sections: List<Section>): List<Section> {
+    private fun mergeAdjacentSections(sections: List<TrackSectionStartEnd>): List<TrackSectionStartEnd> {
         var previousSection = sections.firstOrNull() ?: return emptyList()
         val finalSectionList = mutableListOf(previousSection)
         for(index in 1 until sections.size) {
@@ -75,8 +77,3 @@ class PlaybackHandlerImpl(
         return finalSectionList
     }
 }
-
-data class Section(
-    var start: Double,
-    var end: Double
-)

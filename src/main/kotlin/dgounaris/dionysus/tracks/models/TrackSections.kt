@@ -6,6 +6,6 @@ data class TrackSections(
 )
 
 data class TrackSectionStartEnd(
-    val start: Double,
-    val end: Double
+    var start: Double,
+    var end: Double
 )
