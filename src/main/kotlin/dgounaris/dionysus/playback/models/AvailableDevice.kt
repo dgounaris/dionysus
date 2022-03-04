@@ -4,5 +4,6 @@ data class AvailableDevice(
     val id: String,
     val name: String,
     val type: String,
-    val isActive: Boolean
+    val isActive: Boolean,
+    val volumePercent: Int
 )

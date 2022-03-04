@@ -15,7 +15,10 @@ class FeedbackHandlerImpl(
     ) : FeedbackHandler {
 
     override fun handleFeedback() {
-        val playbackState = spotifyClient.getPlaybackState()
+        val playbackState = spotifyClient.getPlaybackState() ?: run {
+            println("No active playback")
+            return
+        }
         val trackDetails = runBlocking {
             trackDetailsProvider.getTrackDetails(playbackState.item.id)
         }

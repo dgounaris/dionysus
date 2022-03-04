@@ -169,7 +169,7 @@ class SpotifyClientImpl(
         response.receive()
     }
 
-    override fun getPlaybackState() : GetPlaybackStateResponseDto = runBlocking {
+    override fun getPlaybackState() : GetPlaybackStateResponseDto? = runBlocking {
         val response : HttpResponse = httpClient.get("https://api.spotify.com/v1/me/player") {
             header("Authorization", "Bearer $accessToken")
             accept(ContentType.Application.Json)
@@ -177,6 +177,9 @@ class SpotifyClientImpl(
         if (response.status.value == 401) {
             refreshToken()
             return@runBlocking getPlaybackState()
+        }
+        if (response.status.value == 204) {
+            return@runBlocking null
         }
         response.receive()
     }

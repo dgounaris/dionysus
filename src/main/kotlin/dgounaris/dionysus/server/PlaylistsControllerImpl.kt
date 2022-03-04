@@ -100,7 +100,7 @@ class PlaylistsControllerImpl(
                     id = "devices_select"
                     availablePlaybackDevices.map {
                         option {
-                            value = it.id
+                            value = "${it.id}-${it.type}-${it.volumePercent}"
                             + ("${it.name} (${it.type})")
                         }
                     }

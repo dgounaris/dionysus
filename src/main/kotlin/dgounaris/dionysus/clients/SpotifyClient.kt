@@ -13,7 +13,7 @@ interface SpotifyClient {
     fun getTrack(trackId: String): TrackResponseDto
     fun playNext() : String
     fun seekPlaybackPosition(positionMs: Int) : String
-    fun getPlaybackState() : GetPlaybackStateResponseDto
+    fun getPlaybackState() : GetPlaybackStateResponseDto?
     fun setVolume(volumePercent: Int) : String
     fun getAvailableDevices() : GetAvailableDevicesResponseDto
 }

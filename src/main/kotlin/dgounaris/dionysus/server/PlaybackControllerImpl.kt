@@ -4,6 +4,7 @@ import dgounaris.dionysus.common.parallelMap
 import dgounaris.dionysus.dionysense.FeedbackHandler
 import dgounaris.dionysus.dionysense.TrackSectionSelector
 import dgounaris.dionysus.playback.PlaybackHandler
+import dgounaris.dionysus.playback.models.PlaybackDetails
 import dgounaris.dionysus.tracks.models.TrackSectionStartEnd
 import dgounaris.dionysus.tracks.models.TrackSections
 import io.ktor.application.*
@@ -40,7 +41,12 @@ class PlaybackControllerImpl(
     }
 
     private fun autoplay(params: Parameters) {
-        val targetDeviceId = params.entries().single { it.key == "device_select" }.value.single()
+        val targetDeviceDetails = params.entries().single { it.key == "device_select" }.value.single()
+        val playbackDetails = PlaybackDetails(
+            targetDeviceDetails.split("-")[0],
+            targetDeviceDetails.split("-")[1],
+            targetDeviceDetails.split("-")[2].toInt()
+        )
         val targetTracks = params.entries()
             .filter { entry -> entry.key.startsWith("trackSection_") }
             .map { it.key.substringAfter("trackSection_") }
@@ -52,11 +58,16 @@ class PlaybackControllerImpl(
                 }
         }
         val playlistId = params.entries().first { entry -> entry.key.startsWith("playlistId") }.value.first()
-        playbackHandler.play(playlistId, targetSections, targetDeviceId)
+        playbackHandler.play(playlistId, targetSections, playbackDetails)
     }
 
     private fun play(params: Parameters) {
-        val targetDeviceId = params.entries().single { it.key == "device_select" }.value.single()
+        val targetDeviceDetails = params.entries().single { it.key == "device_select" }.value.single()
+        val playbackDetails = PlaybackDetails(
+            targetDeviceDetails.split("-")[0],
+            targetDeviceDetails.split("-")[1],
+            targetDeviceDetails.split("-")[2].toInt()
+        )
         val targetSections = params.entries()
             .filter { entry -> entry.key.startsWith("trackSection_") }
             .map { entry ->
@@ -72,7 +83,7 @@ class PlaybackControllerImpl(
                 )
             }
         val playlistId = params.entries().first { entry -> entry.key.startsWith("playlistId") }.value.first()
-        playbackHandler.play(playlistId, targetSections, targetDeviceId)
+        playbackHandler.play(playlistId, targetSections, playbackDetails)
     }
 
     private fun submitFeedback() {
