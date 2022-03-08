@@ -4,7 +4,7 @@ import dgounaris.dionysus.tracks.TrackDetailsProvider
 import dgounaris.dionysus.tracks.models.TrackSection
 
 class TrackSectionSelectorImpl(private val trackDetailsProvider: TrackDetailsProvider) : TrackSectionSelector {
-    private val minTotalDuration = 40
+    private val minTotalDuration = 60
     private val maxTotalDuration = 100
 
     override suspend fun selectSections(trackId: String) : List<TrackSection> {
@@ -34,7 +34,7 @@ class TrackSectionSelectorImpl(private val trackDetailsProvider: TrackDetailsPro
             return emptyList()
         }
 
-        return if (totalDuration <= 40 ) {
+        return if (totalDuration <= minTotalDuration ) {
             getSectionsForMinimumDuration(
                 sections,
                 indexToOptionallyAdd - 1,

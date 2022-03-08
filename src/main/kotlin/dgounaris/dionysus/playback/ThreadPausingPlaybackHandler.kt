@@ -15,7 +15,7 @@ import kotlin.math.min
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
 
-class PlaybackHandlerImpl(
+class ThreadPausingPlaybackHandler(
     private val spotifyClient: SpotifyClient,
     private val playbackVolumeAdjusterStrategy: PlaybackVolumeAdjusterStrategy
     ) : PlaybackHandler {

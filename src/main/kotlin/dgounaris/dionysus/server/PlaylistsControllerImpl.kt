@@ -2,19 +2,15 @@ package dgounaris.dionysus.server
 
 import dgounaris.dionysus.common.parallelMap
 import dgounaris.dionysus.playback.PlaybackHandler
-import dgounaris.dionysus.playback.PlaybackHandlerImpl
 import dgounaris.dionysus.playlists.PlaylistDetailsProvider
 import dgounaris.dionysus.tracks.TrackDetailsProvider
 import dgounaris.dionysus.tracks.models.TrackDetails
 import io.ktor.application.*
 import io.ktor.html.*
-import io.ktor.http.*
 import io.ktor.request.*
-import io.ktor.response.*
 import io.ktor.routing.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.html.*
-import kotlinx.html.dom.document
 
 class PlaylistsControllerImpl(
     private var playlistDetailsProvider: PlaylistDetailsProvider,
