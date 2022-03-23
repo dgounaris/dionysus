@@ -3,11 +3,8 @@ package dgounaris.dionysus.playback
 import dgounaris.dionysus.clients.SpotifyClient
 import dgounaris.dionysus.playback.models.AvailableDevice
 import dgounaris.dionysus.playback.models.PlaybackDetails
-import dgounaris.dionysus.tracks.models.TrackSection
 import dgounaris.dionysus.tracks.models.TrackSectionStartEnd
 import dgounaris.dionysus.tracks.models.TrackSections
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlin.math.max
@@ -27,15 +24,14 @@ class ThreadPausingPlaybackHandler(
             .toList()
     }
 
-    override fun play(playlistId: String, tracksSections: List<TrackSections>, playbackDetails: PlaybackDetails) {
+    override fun play(tracksSections: List<TrackSections>, playbackDetails: PlaybackDetails) {
         val mergedTrackSectionsList = tracksSections.map { findSongSectionsToPlay(it) }
         mergedTrackSectionsList.forEach { mergedTrackSections ->
-            playSongSections(playlistId, mergedTrackSections, playbackVolumeAdjusterStrategy, playbackDetails)
+            playSongSections(mergedTrackSections, playbackVolumeAdjusterStrategy, playbackDetails)
         }
     }
 
     private fun playSongSections(
-        playlistId: String,
         trackSections: TrackSections,
         playbackVolumeAdjusterStrategy: PlaybackVolumeAdjusterStrategy,
         playbackDetails: PlaybackDetails
@@ -45,7 +41,7 @@ class ThreadPausingPlaybackHandler(
         trackSections.sections.firstOrNull()?.apply {
             val effectiveStartTime = max((this@apply.start * 1000).toInt() - fadeMilliseconds, 0)
             playbackVolumeAdjuster.prepareFadeIn(playbackDetails.selectedDeviceVolumePercent)
-            spotifyClient.playPlaylistTrack(playlistId, trackSections.id, playbackDetails.selectedDeviceId, effectiveStartTime)
+            spotifyClient.playTrack(trackSections.id, playbackDetails.selectedDeviceId, effectiveStartTime)
             playbackVolumeAdjuster.fadeIn(playbackDetails.selectedDeviceVolumePercent)
             runBlocking {
                 delay((this@apply.end * 1000 - this@apply.start * 1000).roundToLong())

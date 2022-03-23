@@ -57,8 +57,7 @@ class PlaybackControllerImpl(
                     TrackSections(trackId, sections.map { section -> TrackSectionStartEnd(section.start, section.end) })
                 }
         }
-        val playlistId = params.entries().first { entry -> entry.key.startsWith("playlistId") }.value.first()
-        playbackHandler.play(playlistId, targetSections, playbackDetails)
+        playbackHandler.play(targetSections, playbackDetails)
     }
 
     private fun play(params: Parameters) {
@@ -82,8 +81,7 @@ class PlaybackControllerImpl(
                             }
                 )
             }
-        val playlistId = params.entries().first { entry -> entry.key.startsWith("playlistId") }.value.first()
-        playbackHandler.play(playlistId, targetSections, playbackDetails)
+        playbackHandler.play(targetSections, playbackDetails)
     }
 
     private fun submitFeedback() {

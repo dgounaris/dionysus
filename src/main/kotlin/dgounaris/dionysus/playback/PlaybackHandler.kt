@@ -6,5 +6,5 @@ import dgounaris.dionysus.tracks.models.TrackSections
 
 interface PlaybackHandler {
     fun getAvailableDevices() : List<AvailableDevice>
-    fun play(playlistId: String, tracksSections: List<TrackSections>, playbackDetails: PlaybackDetails)
+    fun play(tracksSections: List<TrackSections>, playbackDetails: PlaybackDetails)
 }

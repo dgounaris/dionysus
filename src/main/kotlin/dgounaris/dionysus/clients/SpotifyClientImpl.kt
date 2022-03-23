@@ -109,22 +109,22 @@ class SpotifyClientImpl(
             response.receive()
         }
 
-    override fun playPlaylistTrack(playlistId: String, trackId: String, deviceId: String, positionMs: Int?): String = runBlocking {
+    override fun playTrack(trackId: String, deviceId: String, positionMs: Int?): String = runBlocking {
         val response : HttpResponse = httpClient.put("https://api.spotify.com/v1/me/player/play") {
             header("Authorization", "Bearer $accessToken")
             accept(ContentType.Application.Json)
             contentType(ContentType.Application.Json)
             parameter("device_id", deviceId)
             body = StartPlaybackRequestDto(
-                "spotify:playlist:$playlistId",
                 null,
-                Offset("spotify:track:$trackId"),
+                listOf("spotify:track:$trackId"),
+                null,
                 positionMs ?: 0
             )
         }
         if (response.status.value == 401) {
             refreshToken()
-            return@runBlocking playPlaylistTrack(playlistId, trackId, deviceId, positionMs)
+            return@runBlocking playTrack(trackId, deviceId, positionMs)
         }
         response.receive()
     }

@@ -9,7 +9,7 @@ interface SpotifyClient {
     fun getCurrentUserPlaylists() : CurrentUserPlaylistsResponseDto
     fun getPlaylistTracks(playlistId: String) : PlaylistTracksResponseDto
     suspend fun getTrackAudioAnalysis(trackId: String) : TrackAudioAnalysisResponseDto
-    fun playPlaylistTrack(playlistId: String, trackId: String, deviceId: String, positionMs: Int? = null) : String
+    fun playTrack(trackId: String, deviceId: String, positionMs: Int? = null) : String
     fun getTrack(trackId: String): TrackResponseDto
     fun playNext() : String
     fun seekPlaybackPosition(positionMs: Int) : String
