@@ -4,8 +4,8 @@ import dgounaris.dionysus.tracks.TrackDetailsProvider
 import dgounaris.dionysus.tracks.models.TrackSection
 
 class TrackSectionSelectorImpl(private val trackDetailsProvider: TrackDetailsProvider) : TrackSectionSelector {
-    private val minTotalDuration = 60
-    private val maxTotalDuration = 100
+    private val minTotalDuration = 40
+    private val maxTotalDuration = 80
 
     override suspend fun selectSections(trackId: String) : List<TrackSection> {
         val sections = trackDetailsProvider.getTrackAnalysis(trackId)
@@ -17,7 +17,6 @@ class TrackSectionSelectorImpl(private val trackDetailsProvider: TrackDetailsPro
             .firstOrNull { it.second.confidence > 0.5 } ?: return emptyList())
             .also { selectedSections.add(it.second) }
 
-        selectedSections.addAll(getSectionsForMinimumDuration(sections, pivotSection.first-1, pivotSection.second.duration))
         val duration = selectedSections.sumOf { it.duration }
 
         selectedSections.addAll(
@@ -29,24 +28,15 @@ class TrackSectionSelectorImpl(private val trackDetailsProvider: TrackDetailsPro
         return selectedSections
     }
 
-    private fun getSectionsForMinimumDuration(sections: List<TrackSection>, indexToOptionallyAdd: Int, totalDuration: Double) : List<TrackSection> {
-        if (indexToOptionallyAdd < 0 || indexToOptionallyAdd > sections.size - 1) {
+    private fun selectPreviousSections(sections: List<TrackSection>, evaluatedIndex: Int, duration: Double): List<TrackSection> {
+        if (evaluatedIndex < 0 || evaluatedIndex > sections.size - 1) {
             return emptyList()
         }
-
-        return if (totalDuration <= minTotalDuration ) {
-            getSectionsForMinimumDuration(
-                sections,
-                indexToOptionallyAdd - 1,
-                totalDuration + sections[indexToOptionallyAdd].duration
-            ) + sections[indexToOptionallyAdd]
-        } else {
-            emptyList()
+        if (duration < minTotalDuration) {
+            listOf(sections[evaluatedIndex]) +
+                    selectPreviousSections(sections, evaluatedIndex - 1, duration + sections[evaluatedIndex].duration)
         }
-    }
-
-    private fun selectPreviousSections(sections: List<TrackSection>, evaluatedIndex: Int, duration: Double): List<TrackSection> {
-        if (evaluatedIndex < 0 || evaluatedIndex > sections.size - 1 || sections[evaluatedIndex].confidence > 0.7 || duration >= maxTotalDuration) {
+        if (sections[evaluatedIndex].confidence > 0.7 || duration >= maxTotalDuration) {
             return emptyList()
         }
         return listOf(sections[evaluatedIndex]) +
@@ -54,7 +44,14 @@ class TrackSectionSelectorImpl(private val trackDetailsProvider: TrackDetailsPro
     }
 
     private fun selectSubsequentSections(sections: List<TrackSection>, evaluatedIndex: Int, duration: Double): List<TrackSection> {
-        if (evaluatedIndex < 0 || evaluatedIndex > sections.size - 1 || sections[evaluatedIndex].confidence > 0.7 || duration >= maxTotalDuration) {
+        if (evaluatedIndex < 0 || evaluatedIndex > sections.size - 1) {
+            return emptyList()
+        }
+        if (duration < minTotalDuration) {
+            return listOf(sections[evaluatedIndex]) +
+                    selectSubsequentSections(sections, evaluatedIndex + 1, duration + sections[evaluatedIndex].duration)
+        }
+        if (sections[evaluatedIndex].confidence > 0.7 || duration >= maxTotalDuration) {
             return emptyList()
         }
         return listOf(sections[evaluatedIndex]) +
