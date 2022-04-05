@@ -31,6 +31,11 @@ class ThreadPausingPlaybackHandler(
         }
     }
 
+    override fun playWithoutSectionSelection(tracks: List<String>, playbackDetails: PlaybackDetails) {
+        tracks.forEach { spotifyClient.addToPlaybackQueue(it) }
+        spotifyClient.startPlayback(playbackDetails.selectedDeviceId)
+    }
+
     private fun playSongSections(
         trackSections: TrackSections,
         playbackVolumeAdjusterStrategy: PlaybackVolumeAdjusterStrategy,

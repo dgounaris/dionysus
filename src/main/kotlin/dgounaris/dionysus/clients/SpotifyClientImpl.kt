@@ -109,6 +109,19 @@ class SpotifyClientImpl(
             response.receive()
         }
 
+    override suspend fun getTrackAudioFeatures(trackId: String) : TrackAudioFeaturesResponseDto =
+        executeWithCache("getTrackAudioFeatures_$trackId") {
+            val response : HttpResponse = httpClient.get("https://api.spotify.com/v1/audio-features/$trackId") {
+                header("Authorization", "Bearer $accessToken")
+                accept(ContentType.Application.Json)
+            }
+            if (response.status.value == 401) {
+                refreshToken()
+                return getTrackAudioFeatures(trackId)
+            }
+            response.receive()
+        }
+
     override fun playTrack(trackId: String, deviceId: String, positionMs: Int?): String = runBlocking {
         val response : HttpResponse = httpClient.put("https://api.spotify.com/v1/me/player/play") {
             header("Authorization", "Bearer $accessToken")
@@ -125,6 +138,34 @@ class SpotifyClientImpl(
         if (response.status.value == 401) {
             refreshToken()
             return@runBlocking playTrack(trackId, deviceId, positionMs)
+        }
+        response.receive()
+    }
+
+    override fun startPlayback(deviceId: String): String = runBlocking {
+        val response : HttpResponse = httpClient.put("https://api.spotify.com/v1/me/player/play") {
+            header("Authorization", "Bearer $accessToken")
+            accept(ContentType.Application.Json)
+            contentType(ContentType.Application.Json)
+            parameter("device_id", deviceId)
+        }
+        if (response.status.value == 401) {
+            refreshToken()
+            return@runBlocking startPlayback(deviceId)
+        }
+        response.receive()
+    }
+
+    override fun addToPlaybackQueue(trackId: String): String = runBlocking {
+        val response : HttpResponse = httpClient.post("https://api.spotify.com/v1/me/player/queue") {
+            header("Authorization", "Bearer $accessToken")
+            accept(ContentType.Application.Json)
+            contentType(ContentType.Application.Json)
+            parameter("uri", "spotify:track:$trackId")
+        }
+        if (response.status.value == 401) {
+            refreshToken()
+            return@runBlocking addToPlaybackQueue(trackId)
         }
         response.receive()
     }

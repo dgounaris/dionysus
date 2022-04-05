@@ -111,8 +111,16 @@ class PlaylistsControllerImpl(
                 br
                 input {
                     type = InputType.submit
-                    value = "Autoplay using Dionysense"
+                    value = "Autoplay using Dionysense for section selection"
                     formAction = "http://localhost:8888/playback/play/auto"
+                }
+                br
+                +"OR"
+                br
+                input {
+                    type = InputType.submit
+                    value = "Autoplay using Dionysense for song order"
+                    formAction = "http://localhost:8888/playback/play/order"
                 }
             }
         }

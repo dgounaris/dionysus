@@ -2,6 +2,7 @@ package dgounaris.dionysus.server
 
 import dgounaris.dionysus.common.parallelMap
 import dgounaris.dionysus.dionysense.FeedbackHandler
+import dgounaris.dionysus.dionysense.TrackOrderSelector
 import dgounaris.dionysus.dionysense.TrackSectionSelector
 import dgounaris.dionysus.playback.PlaybackHandler
 import dgounaris.dionysus.playback.models.PlaybackDetails
@@ -19,6 +20,7 @@ import kotlin.concurrent.thread
 
 class PlaybackControllerImpl(
     private val trackSectionSelector: TrackSectionSelector,
+    private val trackOrderSelector: TrackOrderSelector,
     private val playbackHandler: PlaybackHandler,
     private val feedbackHandler: FeedbackHandler
     ): PlaybackController {
@@ -32,6 +34,11 @@ class PlaybackControllerImpl(
             post("/playback/play/auto") {
                 val formParameters = call.receiveParameters()
                 thread { autoplay(formParameters) }
+                call.respondHtml { responseAutoplayStartedOk(this) }
+            }
+            post("/playback/play/order") {
+                val formParameters = call.receiveParameters()
+                thread { playWithOrderSelection(formParameters) }
                 call.respondHtml { responseAutoplayStartedOk(this) }
             }
             post("/playback/feedback") {
@@ -58,6 +65,22 @@ class PlaybackControllerImpl(
                 }
         }
         playbackHandler.play(targetSections, playbackDetails)
+    }
+
+    private fun playWithOrderSelection(params: Parameters) {
+        val targetDeviceDetails = params.entries().single { it.key == "device_select" }.value.single()
+        val playbackDetails = PlaybackDetails(
+            targetDeviceDetails.split("-")[0],
+            targetDeviceDetails.split("-")[1],
+            targetDeviceDetails.split("-")[2].toInt()
+        )
+        val targetTracks = params.entries()
+            .filter { entry -> entry.key.startsWith("trackSection_") }
+            .map { it.key.substringAfter("trackSection_") }
+        val targetOrder = runBlocking {
+            trackOrderSelector.selectOrder(targetTracks)
+        }
+        playbackHandler.playWithoutSectionSelection(targetOrder, playbackDetails)
     }
 
     private fun play(params: Parameters) {

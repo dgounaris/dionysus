@@ -8,7 +8,7 @@ class TrackSectionSelectorImpl(private val trackDetailsProvider: TrackDetailsPro
     private val maxTotalDuration = 80
 
     override suspend fun selectSections(trackId: String) : List<TrackSection> {
-        val sections = trackDetailsProvider.getTrackAnalysis(trackId)
+        val sections = trackDetailsProvider.getTrackDetails(trackId).sections
         val selectedSections = mutableListOf<TrackSection>()
 
         val pivotSection = (sections
