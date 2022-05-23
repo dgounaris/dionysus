@@ -3,12 +3,12 @@ package dgounaris.dionysus.storage.user
 import dgounaris.dionysus.user.models.User
 
 class MemoryUserStorage : UserStorage {
-    private val storage: MutableList<User> = mutableListOf()
+    private val storage: HashMap<String, User> = hashMapOf()
 
     override fun save(userRecord: User) {
-        storage.add(userRecord)
+        storage.put(userRecord.spotifyUserId, userRecord)
     }
 
     override fun getBySpotifyUserId(userId: String): User? =
-        storage.firstOrNull { it.spotifyUserId == userId }
+        storage.getOrDefault(userId, null)
 }

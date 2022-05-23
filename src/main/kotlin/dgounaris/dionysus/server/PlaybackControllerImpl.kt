@@ -57,8 +57,9 @@ class PlaybackControllerImpl(
         val targetTracks = params.entries()
             .filter { entry -> entry.key.startsWith("trackSection_") }
             .map { it.key.substringAfter("trackSection_") }
+        val targetTracksWithCustomOrder = runBlocking { trackOrderSelector.selectOrder(targetTracks) }
         val targetSections = runBlocking {
-            targetTracks
+            targetTracksWithCustomOrder
                 .parallelMap { trackId ->
                     val sections = trackSectionSelector.selectSections(trackId)
                     TrackSections(trackId, sections.map { section -> TrackSectionStartEnd(section.start, section.end) })

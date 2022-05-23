@@ -8,7 +8,7 @@ interface SpotifyClient {
     fun refreshToken()
     fun getCurrentUserPlaylists() : CurrentUserPlaylistsResponseDto
     fun getPlaylistTracks(playlistId: String) : PlaylistTracksResponseDto
-    suspend fun getTrackAudioAnalysis(trackId: String) : TrackAudioAnalysisResponseDto
+    suspend fun getTrackAudioAnalysis(trackId: String) : TrackAudioAnalysisResponseDto?
     suspend fun getTrackAudioFeatures(trackId: String) : TrackAudioFeaturesResponseDto
     fun playTrack(trackId: String, deviceId: String, positionMs: Int? = null) : String
     fun startPlayback(deviceId: String): String

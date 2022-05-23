@@ -49,7 +49,11 @@ class ThreadPausingPlaybackHandler(
             spotifyClient.playTrack(trackSections.id, playbackDetails.selectedDeviceId, effectiveStartTime)
             playbackVolumeAdjuster.fadeIn(playbackDetails.selectedDeviceVolumePercent)
             runBlocking {
-                delay((this@apply.end * 1000 - this@apply.start * 1000).roundToLong())
+                if (trackSections.sections.size == 1) {
+                    delay((this@apply.end * 1000 - this@apply.start * 1000 - fadeMilliseconds).roundToLong())
+                } else {
+                    delay((this@apply.end * 1000 - this@apply.start * 1000).roundToLong())
+                }
             }
         }
         trackSections.sections.drop(1).forEach { sectionToPlay ->

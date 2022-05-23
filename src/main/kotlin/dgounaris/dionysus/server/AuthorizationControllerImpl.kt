@@ -38,5 +38,6 @@ class AuthorizationControllerImpl(private val spotifyClient: SpotifyClient) : Au
 
     private fun callback(code: String, state: String?) {
         spotifyClient.getTokens(code)
+
     }
 }

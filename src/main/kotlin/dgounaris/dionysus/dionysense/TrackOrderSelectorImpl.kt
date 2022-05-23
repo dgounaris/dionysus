@@ -16,6 +16,8 @@ class TrackOrderSelectorImpl(private val trackDetailsProvider: TrackDetailsProvi
             .groupBy { it.first % 2 }
             .values.toList()
 
+        //return sortedTrackDetails.reversed().map { it.id }
+
         val bellSortedTrackDetails = happySongs + sadSongs.reversed()
         return bellSortedTrackDetails.map { it.id }
     }

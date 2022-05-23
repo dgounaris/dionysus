@@ -10,7 +10,7 @@ class TrackDetailsProviderImpl(private val spotifyClient: SpotifyClient) : Track
         return TrackDetails(
             track.id,
             track.name,
-            getTrackAnalysis(track.id),
+            getTrackAnalysis(track.id) ?: emptyList(),
             getTrackFeatures(track.id)
         ).also {
             println("Track ${track.name} id: ${track.id}")
@@ -21,16 +21,16 @@ class TrackDetailsProviderImpl(private val spotifyClient: SpotifyClient) : Track
         return TrackDetails(
             track.id,
             track.name,
-            getTrackAnalysis(track.id),
+            getTrackAnalysis(track.id) ?: emptyList(),
             getTrackFeatures(track.id)
         ).also {
             println("Track ${track.name} id: ${track.id}")
         }
     }
 
-    private suspend fun getTrackAnalysis(trackId: String) : List<TrackSection> {
+    private suspend fun getTrackAnalysis(trackId: String) : List<TrackSection>? {
         val analysis = spotifyClient.getTrackAudioAnalysis(trackId)
-        return analysis.sections.map { TrackSection(
+        return analysis?.sections?.map { TrackSection(
             it.start,
             it.duration,
             it.start + it.duration,
