@@ -1,5 +1,6 @@
 package dgounaris.dionysus
 
+import dgounaris.dionysus.auth.authModule
 import dgounaris.dionysus.clients.clientsModule
 import dgounaris.dionysus.dionysense.dionysenseModule
 import dgounaris.dionysus.playback.playbackModule
@@ -20,7 +21,8 @@ fun main(vararg args: String) {
             playbackModule,
             dionysenseModule,
             serverModule,
-            storageModule
+            storageModule,
+            authModule
         )
     }
     val server = get().get<Server>(Server::class)

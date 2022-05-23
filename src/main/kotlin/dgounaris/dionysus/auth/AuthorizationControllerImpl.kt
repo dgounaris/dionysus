@@ -1,13 +1,18 @@
-package dgounaris.dionysus.server
+package dgounaris.dionysus.auth
 
 import dgounaris.dionysus.clients.SpotifyClient
+import dgounaris.dionysus.storage.user.UserStorage
+import dgounaris.dionysus.user.models.User
 import io.ktor.application.*
 import io.ktor.html.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import kotlinx.html.*
 
-class AuthorizationControllerImpl(private val spotifyClient: SpotifyClient) : AuthorizationController {
+class AuthorizationControllerImpl(
+    private val spotifyClient: SpotifyClient,
+    private val userStorage: UserStorage
+    ) : AuthorizationController {
     override fun configureRouting(application: Application) {
         application.routing {
             get("/test") {
@@ -26,6 +31,9 @@ class AuthorizationControllerImpl(private val spotifyClient: SpotifyClient) : Au
         }
     }
 
+    override fun getCurrentUser(): User? =
+        userStorage.getBySpotifyUserId("")
+
     private fun login(html: HTML) {
         val authUrl = spotifyClient.getAuthorizeUrl()
         html.body {
@@ -38,6 +46,5 @@ class AuthorizationControllerImpl(private val spotifyClient: SpotifyClient) : Au
 
     private fun callback(code: String, state: String?) {
         spotifyClient.getTokens(code)
-
     }
 }
