@@ -1,9 +1,13 @@
 package dgounaris.dionysus.tracks
 
 import dgounaris.dionysus.clients.SpotifyClient
+import dgounaris.dionysus.storage.tracks.TracksStorage
 import dgounaris.dionysus.tracks.models.*
 
-class TrackDetailsProviderImpl(private val spotifyClient: SpotifyClient) : TrackDetailsProvider {
+class TrackDetailsProviderImpl(
+    private val spotifyClient: SpotifyClient,
+    private val tracksStorage: TracksStorage
+    ) : TrackDetailsProvider {
 
     override suspend fun getTrackDetails(trackId: String) : TrackDetails {
         val track = spotifyClient.getTrack(trackId)
