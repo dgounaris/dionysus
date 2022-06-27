@@ -4,8 +4,7 @@ import dgounaris.dionysus.tracks.TrackDetailsProvider
 import dgounaris.dionysus.tracks.models.TrackSection
 
 class TrackSectionSelectorImpl(private val trackDetailsProvider: TrackDetailsProvider) : TrackSectionSelector {
-    private val minTotalDuration = 60
-    private val maxTotalDuration = 80
+    private val perSideTotalDuration = 60
 
     override suspend fun selectSections(trackId: String) : List<TrackSection> {
         val sections = trackDetailsProvider.getTrackDetails(trackId).sections
@@ -32,11 +31,11 @@ class TrackSectionSelectorImpl(private val trackDetailsProvider: TrackDetailsPro
         if (evaluatedIndex < 0 || evaluatedIndex > sections.size - 1) {
             return emptyList()
         }
-        if (duration < minTotalDuration) {
+        if (duration < perSideTotalDuration) {
             listOf(sections[evaluatedIndex]) +
                     selectPreviousSections(sections, evaluatedIndex - 1, duration + sections[evaluatedIndex].duration)
         }
-        if (sections[evaluatedIndex].confidence > 0.7 || duration >= maxTotalDuration) {
+        if (sections[evaluatedIndex].confidence > 0.7 || duration >= perSideTotalDuration) {
             return emptyList()
         }
         return listOf(sections[evaluatedIndex]) +
@@ -47,11 +46,11 @@ class TrackSectionSelectorImpl(private val trackDetailsProvider: TrackDetailsPro
         if (evaluatedIndex < 0 || evaluatedIndex > sections.size - 1) {
             return emptyList()
         }
-        if (duration < minTotalDuration) {
+        if (duration < perSideTotalDuration) {
             return listOf(sections[evaluatedIndex]) +
                     selectSubsequentSections(sections, evaluatedIndex + 1, duration + sections[evaluatedIndex].duration)
         }
-        if (sections[evaluatedIndex].confidence > 0.7 || duration >= maxTotalDuration) {
+        if (sections[evaluatedIndex].confidence > 0.7 || duration >= perSideTotalDuration) {
             return emptyList()
         }
         return listOf(sections[evaluatedIndex]) +
