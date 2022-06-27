@@ -9,6 +9,6 @@ class MemoryPlaylistsStorage : PlaylistsStorage {
         storage[userId] = playlists
     }
 
-    override fun getPlaylists(userId: String) =
+    override fun getPlaylistsByUserId(userId: String) =
         storage[userId]
 }

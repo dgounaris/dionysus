@@ -34,7 +34,7 @@ class PlaylistsControllerImpl(
         val playlist = playlistDetailsProvider.getPlaylistDetails(playlistName)
         val playlistTrackDetails = runBlocking {
             playlist.tracks.parallelMap { track ->
-                val trackDetails = trackDetailsProvider.getTrackDetails(track)
+                val trackDetails = trackDetailsProvider.getTrackDetails(track.id)
                 trackDetails.toTrackDetailsResponseDto()
             }
         }
@@ -46,43 +46,22 @@ class PlaylistsControllerImpl(
             p {
                 +"Playlist $playlistName"
                 br
-                +"Select track sections to play"
+                +"The following tracks will be played:"
             }
             form {
-                action = "http://localhost:8888/playback/play"
                 method = FormMethod.post
                 input {
                     hidden = true
                     type = InputType.hidden
                     name = "playlistId_${playlist.id}"
                     id = "playlistId_${playlist.id}"
-                    value = playlist.id
+                    value = playlist.name
                     hidden
                 }
                 ol {
                     playlistResponse.trackDetails.map { trackDetails ->
                         li {
                             +trackDetails.name
-                            trackDetails.sections.map { section ->
-                                input {
-                                    type = InputType.checkBox
-                                    name = "trackSection_${trackDetails.id}"
-                                    id = "trackSection_${trackDetails.id}_${section.start}-${section.end}"
-                                    value = "${section.start}-${section.end}"
-                                }
-                                label {
-                                    htmlFor = "trackSection_${trackDetails.id}_${section.start}-${section.end}"
-                                    text("${String.format("%.2f", section.start)}-${String.format("%.2f", section.end)}")
-                                }
-                            }
-                            input {
-                                hidden = true
-                                type = InputType.hidden
-                                name = "trackSection_${trackDetails.id}"
-                                id = "trackSection_${trackDetails.id}_placeholder"
-                                value = ""
-                                hidden
-                            }
                         }
                         br
                     }
@@ -104,23 +83,8 @@ class PlaylistsControllerImpl(
                 br
                 input {
                     type = InputType.submit
-                    value = "Submit"
-                }
-                br
-                +"OR"
-                br
-                input {
-                    type = InputType.submit
-                    value = "Autoplay using Dionysense for section selection"
+                    value = "Autoplay using Dionysense for song and section order"
                     formAction = "http://localhost:8888/playback/play/auto"
-                }
-                br
-                +"OR"
-                br
-                input {
-                    type = InputType.submit
-                    value = "Autoplay using Dionysense for song order"
-                    formAction = "http://localhost:8888/playback/play/order"
                 }
             }
         }

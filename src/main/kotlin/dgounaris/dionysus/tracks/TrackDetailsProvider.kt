@@ -6,5 +6,4 @@ import dgounaris.dionysus.tracks.models.TrackSection
 
 interface TrackDetailsProvider {
     suspend fun getTrackDetails(trackId: String) : TrackDetails
-    suspend fun getTrackDetails(track: Track) : TrackDetails
 }

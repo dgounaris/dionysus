@@ -1,19 +1,13 @@
 package dgounaris.dionysus.playlists
 
-import dgounaris.dionysus.auth.AuthorizationController
 import dgounaris.dionysus.clients.SpotifyClient
 import dgounaris.dionysus.playlists.models.Playlist
-import dgounaris.dionysus.storage.playlists.MemoryPlaylistsStorage
-import dgounaris.dionysus.storage.playlists.PlaylistsStorage
 import dgounaris.dionysus.tracks.models.Track
 
 class PlaylistDetailsProviderImpl(
-    private val spotifyClient: SpotifyClient,
-    private val playlistsStorage: PlaylistsStorage,
-    private val authorizationController: AuthorizationController
+    private val spotifyClient: SpotifyClient
     ) : PlaylistDetailsProvider {
     override fun getCurrentUserPlaylistNames() : List<String> {
-        var currentUser = authorizationController.getCurrentUser()
         return spotifyClient.getCurrentUserPlaylists().items.map { playlistItem ->
             playlistItem.name
         }

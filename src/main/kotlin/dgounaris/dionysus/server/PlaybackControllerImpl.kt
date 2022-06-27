@@ -6,19 +6,20 @@ import dgounaris.dionysus.dionysense.TrackOrderSelector
 import dgounaris.dionysus.dionysense.TrackSectionSelector
 import dgounaris.dionysus.playback.PlaybackHandler
 import dgounaris.dionysus.playback.models.PlaybackDetails
+import dgounaris.dionysus.playlists.PlaylistDetailsProvider
 import dgounaris.dionysus.tracks.models.TrackSectionStartEnd
 import dgounaris.dionysus.tracks.models.TrackSections
 import io.ktor.application.*
 import io.ktor.html.*
 import io.ktor.http.*
 import io.ktor.request.*
-import io.ktor.response.*
 import io.ktor.routing.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.html.*
 import kotlin.concurrent.thread
 
 class PlaybackControllerImpl(
+    private val playlistDetailsProvider: PlaylistDetailsProvider,
     private val trackSectionSelector: TrackSectionSelector,
     private val trackOrderSelector: TrackOrderSelector,
     private val playbackHandler: PlaybackHandler,
@@ -26,19 +27,9 @@ class PlaybackControllerImpl(
     ): PlaybackController {
     override fun configureRouting(application: Application) {
         application.routing {
-            post("/playback/play") {
-                val formParameters = call.receiveParameters()
-                thread { play(formParameters) }
-                call.respondText("Playback started successfully")
-            }
             post("/playback/play/auto") {
                 val formParameters = call.receiveParameters()
                 thread { autoplay(formParameters) }
-                call.respondHtml { responseAutoplayStartedOk(this) }
-            }
-            post("/playback/play/order") {
-                val formParameters = call.receiveParameters()
-                thread { playWithOrderSelection(formParameters) }
                 call.respondHtml { responseAutoplayStartedOk(this) }
             }
             post("/playback/feedback") {
@@ -54,10 +45,9 @@ class PlaybackControllerImpl(
             targetDeviceDetails.split("-")[1],
             targetDeviceDetails.split("-")[2].toInt()
         )
-        val targetTracks = params.entries()
-            .filter { entry -> entry.key.startsWith("trackSection_") }
-            .map { it.key.substringAfter("trackSection_") }
-        val targetTracksWithCustomOrder = runBlocking { trackOrderSelector.selectOrder(targetTracks) }
+        val playlistName = params.entries().single { it.key.startsWith("playlistId_") }.value.single()
+        val targetPlaylist = playlistDetailsProvider.getPlaylistDetails(playlistName)
+        val targetTracksWithCustomOrder = runBlocking { trackOrderSelector.selectOrder(targetPlaylist.tracks.map { it.id }) }
         val targetSections = runBlocking {
             targetTracksWithCustomOrder
                 .parallelMap { trackId ->
@@ -65,46 +55,6 @@ class PlaybackControllerImpl(
                     TrackSections(trackId, sections.map { section -> TrackSectionStartEnd(section.start, section.end) })
                 }
         }
-        playbackHandler.play(targetSections, playbackDetails)
-    }
-
-    private fun playWithOrderSelection(params: Parameters) {
-        val targetDeviceDetails = params.entries().single { it.key == "device_select" }.value.single()
-        val playbackDetails = PlaybackDetails(
-            targetDeviceDetails.split("-")[0],
-            targetDeviceDetails.split("-")[1],
-            targetDeviceDetails.split("-")[2].toInt()
-        )
-        val targetTracks = params.entries()
-            .filter { entry -> entry.key.startsWith("trackSection_") }
-            .map { it.key.substringAfter("trackSection_") }
-        val targetOrder = runBlocking {
-            trackOrderSelector.selectOrder(targetTracks)
-        }
-        playbackHandler.playWithoutSectionSelection(targetOrder, playbackDetails)
-    }
-
-    private fun play(params: Parameters) {
-        val targetDeviceDetails = params.entries().single { it.key == "device_select" }.value.single()
-        val playbackDetails = PlaybackDetails(
-            targetDeviceDetails.split("-")[0],
-            targetDeviceDetails.split("-")[1],
-            targetDeviceDetails.split("-")[2].toInt()
-        )
-        val targetSections = params.entries()
-            .filter { entry -> entry.key.startsWith("trackSection_") }
-            .map { entry ->
-                val values = entry.value
-                val key = entry.key
-                TrackSections(
-                    key.substringAfter("trackSection_"),
-                    values.filter { value -> value.isNotBlank() }
-                            .map { value -> value.split("-") }
-                            .map { list ->
-                                TrackSectionStartEnd(list.elementAt(0).toDouble(), list.elementAt(1).toDouble())
-                            }
-                )
-            }
         playbackHandler.play(targetSections, playbackDetails)
     }
 

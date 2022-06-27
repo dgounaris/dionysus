@@ -10,24 +10,18 @@ class TrackDetailsProviderImpl(
     ) : TrackDetailsProvider {
 
     override suspend fun getTrackDetails(trackId: String) : TrackDetails {
+        val persistedDetails = tracksStorage.getTrackDetails(trackId)
+        if (persistedDetails != null) {
+            return persistedDetails
+        }
         val track = spotifyClient.getTrack(trackId)
         return TrackDetails(
             track.id,
             track.name,
             getTrackAnalysis(track.id) ?: emptyList(),
             getTrackFeatures(track.id)
-        ).also {
-            println("Track ${track.name} id: ${track.id}")
-        }
-    }
-
-    override suspend fun getTrackDetails(track: Track) : TrackDetails {
-        return TrackDetails(
-            track.id,
-            track.name,
-            getTrackAnalysis(track.id) ?: emptyList(),
-            getTrackFeatures(track.id)
-        ).also {
+        ).also { tracksStorage.save(it) }
+         .also {
             println("Track ${track.name} id: ${track.id}")
         }
     }
