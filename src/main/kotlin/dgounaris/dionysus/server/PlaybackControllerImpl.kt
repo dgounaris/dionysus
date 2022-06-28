@@ -7,6 +7,7 @@ import dgounaris.dionysus.dionysense.TrackSectionSelector
 import dgounaris.dionysus.playback.PlaybackHandler
 import dgounaris.dionysus.playback.models.PlaybackDetails
 import dgounaris.dionysus.playlists.PlaylistDetailsProvider
+import dgounaris.dionysus.tracks.models.TrackSection
 import dgounaris.dionysus.tracks.models.TrackSectionStartEnd
 import dgounaris.dionysus.tracks.models.TrackSections
 import dgounaris.dionysus.view.postAutoplayView
@@ -30,8 +31,7 @@ class PlaybackControllerImpl(
         application.routing {
             post("/playback/play/auto") {
                 val formParameters = call.receiveParameters()
-                thread { autoplay(formParameters) }
-                call.respondHtml { responseAutoplayStartedOk(this) }
+                call.respondHtml { autoplay(formParameters, this) }
             }
             post("/playback/feedback") {
                 submitFeedback()
@@ -39,7 +39,7 @@ class PlaybackControllerImpl(
         }
     }
 
-    private fun autoplay(params: Parameters) {
+    private fun autoplay(params: Parameters, html: HTML) {
         val targetDeviceDetails = params.entries().single { it.key == "device_select" }.value.single()
         val playbackDetails = PlaybackDetails(
             targetDeviceDetails.split("-")[0],
@@ -52,11 +52,14 @@ class PlaybackControllerImpl(
         val targetSections = runBlocking {
             targetTracksWithCustomOrder
                 .parallelMap { trackId ->
-                    val sections = trackSectionSelector.selectSections(trackId)
-                    TrackSections(trackId, sections.map { section -> TrackSectionStartEnd(section.start, section.end) })
+                    Pair(trackId, trackSectionSelector.selectSections(trackId))
                 }
         }
-        playbackHandler.play(targetSections, playbackDetails)
+        val trackSections = targetSections.map {
+            TrackSections(it.first, it.second.map { section -> TrackSectionStartEnd(section.start, section.end) })
+        }
+        thread { playbackHandler.play(trackSections, playbackDetails) }
+        responseAutoplayStartedOk(html)
     }
 
     private fun submitFeedback() {
