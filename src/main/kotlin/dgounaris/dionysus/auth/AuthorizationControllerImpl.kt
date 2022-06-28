@@ -3,6 +3,7 @@ package dgounaris.dionysus.auth
 import dgounaris.dionysus.clients.SpotifyClient
 import dgounaris.dionysus.storage.user.UserStorage
 import dgounaris.dionysus.user.models.User
+import dgounaris.dionysus.view.loginView
 import io.ktor.application.*
 import io.ktor.html.*
 import io.ktor.response.*
@@ -36,12 +37,7 @@ class AuthorizationControllerImpl(
 
     private fun login(html: HTML) {
         val authUrl = spotifyClient.getAuthorizeUrl()
-        html.body {
-            p {
-                +"Click this link to login: "
-                a(authUrl) { +"Login" }
-            }
-        }
+        loginView(html, authUrl)
     }
 
     private fun callback(code: String, state: String?) {

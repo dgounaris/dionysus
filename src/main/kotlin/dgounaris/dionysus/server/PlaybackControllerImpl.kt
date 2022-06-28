@@ -9,6 +9,7 @@ import dgounaris.dionysus.playback.models.PlaybackDetails
 import dgounaris.dionysus.playlists.PlaylistDetailsProvider
 import dgounaris.dionysus.tracks.models.TrackSectionStartEnd
 import dgounaris.dionysus.tracks.models.TrackSections
+import dgounaris.dionysus.view.postAutoplayView
 import io.ktor.application.*
 import io.ktor.html.*
 import io.ktor.http.*
@@ -63,22 +64,6 @@ class PlaybackControllerImpl(
     }
 
     private fun responseAutoplayStartedOk(html: HTML) {
-        html.body {
-            p {
-                +"Playback started successfully"
-            }
-            br
-            p {
-                +"For feedback on inaccurate selection please press: "
-                form {
-                    action = "http://localhost:8888/playback/feedback"
-                    method = FormMethod.post
-                    input {
-                        type = InputType.submit
-                        value = "Submit feedback"
-                    }
-                }
-            }
-        }
+        postAutoplayView(html)
     }
 }
