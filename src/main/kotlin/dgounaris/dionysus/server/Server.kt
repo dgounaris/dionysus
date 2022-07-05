@@ -16,7 +16,7 @@ class Server(
     private val authorizationController: AuthorizationController
     ) {
     fun start() {
-        embeddedServer(Netty, port = 8888, host = "localhost") {
+        embeddedServer(Netty, port = 8888) {
             install(ContentNegotiation) {
                 jackson {
                     enable(SerializationFeature.INDENT_OUTPUT)
