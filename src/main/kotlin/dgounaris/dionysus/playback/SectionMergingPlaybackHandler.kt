@@ -23,6 +23,7 @@ class SectionMergingPlaybackHandler(
 
     override fun play(tracksSections: List<TrackSections>, playbackDetails: PlaybackDetails) {
         val mergedTrackSectionsList = tracksSections.map { findSongSectionsToPlay(it) }
+        // todo replace this with passing a playbackPlanMediator reference
         mergedTrackSectionsList.forEach { mergedTrackSections ->
             playbackExecutor.playSongSections(mergedTrackSections, playbackVolumeAdjusterStrategy, playbackDetails)
         }

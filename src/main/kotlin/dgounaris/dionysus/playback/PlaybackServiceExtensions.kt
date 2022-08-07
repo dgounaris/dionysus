@@ -8,5 +8,5 @@ val playbackModule = module {
     single<PlaybackVolumeAdjuster> { LinearPlaybackVolumeAdjuster(get()) }
     single<PlaybackHandler> { SectionMergingPlaybackHandler(get(), get(), get()) }
     single<PlaybackExecutor> { CoroutinePausingPlaybackExecutor(get()) }
-    single<PlaybackPlan> { SimplePlaybackPlan() }
+    single<PlaybackPlanMediator> { SimplePlaybackPlanMediator() }
 }
