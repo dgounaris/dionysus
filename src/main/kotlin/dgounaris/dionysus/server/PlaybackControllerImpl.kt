@@ -1,5 +1,6 @@
 package dgounaris.dionysus.server
 
+import dgounaris.dionysus.auth.AuthorizationController
 import dgounaris.dionysus.common.parallelMap
 import dgounaris.dionysus.dionysense.FeedbackHandler
 import dgounaris.dionysus.dionysense.TrackOrderSelector
@@ -15,6 +16,7 @@ import io.ktor.application.*
 import io.ktor.html.*
 import io.ktor.http.*
 import io.ktor.request.*
+import io.ktor.response.*
 import io.ktor.routing.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.html.*
@@ -25,11 +27,15 @@ class PlaybackControllerImpl(
     private val trackSectionSelector: TrackSectionSelector,
     private val trackOrderSelector: TrackOrderSelector,
     private val playbackHandler: PlaybackHandler,
-    private val feedbackHandler: FeedbackHandler
+    private val feedbackHandler: FeedbackHandler,
+    private val authorizationController: AuthorizationController
     ): PlaybackController {
     override fun configureRouting(application: Application) {
         application.routing {
             post("/playback/play/auto") {
+                if (!authorizationController.isAuthorized("")) {
+                    return@post call.respond(HttpStatusCode.Unauthorized)
+                }
                 val formParameters = call.receiveParameters()
                 call.respondHtml { autoplay(formParameters, this) }
             }

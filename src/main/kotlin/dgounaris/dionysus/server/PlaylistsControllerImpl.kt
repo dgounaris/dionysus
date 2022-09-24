@@ -1,5 +1,6 @@
 package dgounaris.dionysus.server
 
+import dgounaris.dionysus.auth.AuthorizationController
 import dgounaris.dionysus.common.parallelMap
 import dgounaris.dionysus.playback.PlaybackHandler
 import dgounaris.dionysus.playlists.PlaylistDetailsProvider
@@ -9,7 +10,9 @@ import dgounaris.dionysus.view.currentUserPlaylistsSelectionView
 import dgounaris.dionysus.view.playlistTracksView
 import io.ktor.application.*
 import io.ktor.html.*
+import io.ktor.http.*
 import io.ktor.request.*
+import io.ktor.response.*
 import io.ktor.routing.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.html.*
@@ -17,16 +20,23 @@ import kotlinx.html.*
 class PlaylistsControllerImpl(
     private var playlistDetailsProvider: PlaylistDetailsProvider,
     private val playbackHandler: PlaybackHandler,
-    private val trackDetailsProvider: TrackDetailsProvider
+    private val trackDetailsProvider: TrackDetailsProvider,
+    private val authorizationController: AuthorizationController
     ) : PlaylistsController {
     override fun configureRouting(application: Application) {
         application.routing {
             get("/playlists/tracks") {
+                if (!authorizationController.isAuthorized("")) {
+                    return@get call.respond(HttpStatusCode.Unauthorized)
+                }
                 val playlistId = call.request.queryParameters["playlistName"]
                     ?: call.receiveParameters()["playlistName"]!!
                 call.respondHtml { getPlaylistTracks(playlistId, this) }
             }
             get("/playlists/me") {
+                if (!authorizationController.isAuthorized("")) {
+                    return@get call.respond(HttpStatusCode.Unauthorized)
+                }
                 call.respondHtml { getCurrentUserPlaylists(this) }
             }
         }
