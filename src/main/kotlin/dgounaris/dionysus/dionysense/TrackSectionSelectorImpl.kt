@@ -32,7 +32,7 @@ class TrackSectionSelectorImpl(private val trackDetailsProvider: TrackDetailsPro
             return emptyList()
         }
         if (duration < perSideTotalDuration) {
-            listOf(sections[evaluatedIndex]) +
+            return listOf(sections[evaluatedIndex]) +
                     selectPreviousSections(sections, evaluatedIndex - 1, duration + sections[evaluatedIndex].duration)
         }
         if (sections[evaluatedIndex].confidence > 0.7 || duration >= perSideTotalDuration) {

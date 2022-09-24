@@ -3,6 +3,7 @@ package dgounaris.dionysus.playback
 import dgounaris.dionysus.clients.SpotifyClient
 import dgounaris.dionysus.playback.models.AvailableDevice
 import dgounaris.dionysus.playback.models.PlaybackDetails
+import dgounaris.dionysus.playback.models.PlaybackPlanItem
 import dgounaris.dionysus.tracks.models.TrackSectionStartEnd
 import dgounaris.dionysus.tracks.models.TrackSections
 import kotlin.math.max
@@ -11,6 +12,7 @@ import kotlin.math.min
 class SectionMergingPlaybackHandler(
     private val spotifyClient: SpotifyClient,
     private val playbackVolumeAdjusterStrategy: PlaybackVolumeAdjusterStrategy,
+    private val playbackPlanMediator: PlaybackPlanMediator,
     private val playbackExecutor: PlaybackExecutor
     ) : PlaybackHandler {
 
@@ -23,6 +25,9 @@ class SectionMergingPlaybackHandler(
 
     override fun play(tracksSections: List<TrackSections>, playbackDetails: PlaybackDetails) {
         val mergedTrackSectionsList = tracksSections.map { findSongSectionsToPlay(it) }
+        val playbackPlanItems = mergedTrackSectionsList.map {
+            PlaybackPlanItem(it, playbackDetails)
+        }
         // todo replace this with passing a playbackPlanMediator reference
         mergedTrackSectionsList.forEach { mergedTrackSections ->
             playbackExecutor.playSongSections(mergedTrackSections, playbackVolumeAdjusterStrategy, playbackDetails)
