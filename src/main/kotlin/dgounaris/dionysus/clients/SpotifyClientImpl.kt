@@ -73,6 +73,19 @@ class SpotifyClientImpl(
         userStorage.save(User("", content.accessToken, refreshToken))
     }
 
+    override fun getCurrentUser() : String = runBlocking {
+        TODO("Not yet implemented")
+        val response : HttpResponse = httpClient.get("https://api.spotify.com/v1/me") {
+            header("Authorization", "Bearer ${getAccessToken()}")
+            accept(ContentType.Application.Json)
+        }
+        if (response.status.value == 401) {
+            refreshToken()
+            return@runBlocking getCurrentUser()
+        }
+        response.receive()
+    }
+
     override fun getCurrentUserPlaylists() : CurrentUserPlaylistsResponseDto = runBlocking {
             val response : HttpResponse = httpClient.get("https://api.spotify.com/v1/me/playlists") {
                 header("Authorization", "Bearer ${getAccessToken()}")
