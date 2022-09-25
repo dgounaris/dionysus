@@ -25,8 +25,14 @@ class SectionMergingPlaybackHandler(
 
     override fun play(tracksSections: List<TrackSections>, playbackDetails: PlaybackDetails) {
         val mergedTrackSectionsList = tracksSections.map { findSongSectionsToPlay(it) }
+        val currentTime = System.currentTimeMillis()
+        var delayFromPrevious = 0.0
         val playbackPlanItems = mergedTrackSectionsList.map {
-            PlaybackPlanItem(it, playbackDetails)
+            val item = PlaybackPlanItem("", currentTime + (delayFromPrevious * 1000).toLong(), it, playbackDetails)
+            delayFromPrevious += (it.sections.lastOrNull()?.end ?: 0.0) - (it.sections.firstOrNull()?.start ?: 0.0)
+            return@map item
+        }.forEach {
+            playbackPlanMediator.save(it)
         }
         // todo replace this with passing a playbackPlanMediator reference
         mergedTrackSectionsList.forEach { mergedTrackSections ->
