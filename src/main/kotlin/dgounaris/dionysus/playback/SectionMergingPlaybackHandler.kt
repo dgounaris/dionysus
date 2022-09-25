@@ -6,6 +6,7 @@ import dgounaris.dionysus.playback.models.PlaybackDetails
 import dgounaris.dionysus.playback.models.PlaybackPlanItem
 import dgounaris.dionysus.tracks.models.TrackSectionStartEnd
 import dgounaris.dionysus.tracks.models.TrackSections
+import kotlinx.coroutines.runBlocking
 import kotlin.math.max
 import kotlin.math.min
 
@@ -38,6 +39,7 @@ class SectionMergingPlaybackHandler(
         mergedTrackSectionsList.forEach { mergedTrackSections ->
             playbackExecutor.playSongSections(mergedTrackSections, playbackVolumeAdjusterStrategy, playbackDetails)
         }
+        //runBlocking { playbackExecutor.play("", playbackPlanMediator, playbackVolumeAdjusterStrategy) }
     }
 
     private fun findSongSectionsToPlay(trackSections: TrackSections): TrackSections {

@@ -7,7 +7,7 @@ import java.util.concurrent.PriorityBlockingQueue
 
 interface PlaybackPlanMediator {
     fun save(playbackPlanItem: PlaybackPlanItem)
-    //fun getNextPlanItem(user: String)
+    fun getNextPlanItem(user: String) : PlaybackPlanItem?
     //fun delayNextPlanItem(user: String) // this can be implemented by mutating the next playback's exec time
 }
 
@@ -18,14 +18,17 @@ class SimplePlaybackPlanMediator : PlaybackPlanMediator {
     override fun save(playbackPlanItem: PlaybackPlanItem) {
         val userPq = pq.getOrDefault(playbackPlanItem.user, PriorityBlockingQueue(50, playbackPlanItemComparator))
         userPq.add(playbackPlanItem)
-        pq.replace(playbackPlanItem.user, userPq)
+        val putResult = pq.putIfAbsent(playbackPlanItem.user, userPq)
+        if (putResult != null) {
+            pq.replace(playbackPlanItem.user, userPq)
+        }
     }
 
-    /*override fun getNextPlanItem(user: String) {
-        pq.remove()
+    override fun getNextPlanItem(user: String) : PlaybackPlanItem? {
+        return pq[user]?.poll()
     }
 
-    override fun delayNextPlanItem(user: String) {
+    /*override fun delayNextPlanItem(user: String) {
         val element = pq.remove()
     }*/
 }

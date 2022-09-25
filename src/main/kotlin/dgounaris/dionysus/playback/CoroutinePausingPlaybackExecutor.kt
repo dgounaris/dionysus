@@ -3,6 +3,8 @@ package dgounaris.dionysus.playback
 import dgounaris.dionysus.clients.SpotifyClient
 import dgounaris.dionysus.playback.models.PlaybackDetails
 import dgounaris.dionysus.tracks.models.TrackSections
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlin.math.max
@@ -39,5 +41,15 @@ class CoroutinePausingPlaybackExecutor(
             }
         }
         playbackVolumeAdjuster.fadeOut(playbackDetails.selectedDeviceVolumePercent)
+    }
+
+    override suspend fun play(user: String, playbackPlanMediator: PlaybackPlanMediator, playbackVolumeAdjusterStrategy: PlaybackVolumeAdjusterStrategy) {
+        coroutineScope {
+            async {
+                playbackPlanMediator.getNextPlanItem(user)?.let {
+                    playSongSections(it.trackSections, playbackVolumeAdjusterStrategy, it.playbackDetails)
+                }
+            }
+        }
     }
 }

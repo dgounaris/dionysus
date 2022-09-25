@@ -9,4 +9,6 @@ interface PlaybackExecutor {
         playbackVolumeAdjusterStrategy: PlaybackVolumeAdjusterStrategy,
         playbackDetails: PlaybackDetails
     )
+
+    suspend fun play(user: String, playbackPlanMediator: PlaybackPlanMediator, playbackVolumeAdjusterStrategy: PlaybackVolumeAdjusterStrategy)
 }
