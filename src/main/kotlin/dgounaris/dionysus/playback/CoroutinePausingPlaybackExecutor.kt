@@ -14,7 +14,7 @@ import kotlin.math.roundToLong
 class CoroutinePausingPlaybackExecutor(
     private val spotifyClient: SpotifyClient
 ) : PlaybackExecutor {
-    override fun playSongSections(
+    override suspend fun playSongSections(
         trackSections: TrackSections,
         playbackVolumeAdjusterStrategy: PlaybackVolumeAdjusterStrategy,
         playbackDetails: PlaybackDetails
@@ -26,15 +26,11 @@ class CoroutinePausingPlaybackExecutor(
             playbackVolumeAdjuster.prepareFadeIn(playbackDetails.selectedDeviceVolumePercent)
             spotifyClient.playTrack(trackSections.id, playbackDetails.selectedDeviceId, effectiveStartTime)
             playbackVolumeAdjuster.fadeIn(playbackDetails.selectedDeviceVolumePercent)
-            runBlocking {
-                delay((this@apply.end * 1000 - this@apply.start * 1000 + fadeMilliseconds).roundToLong())
-            }
+            delay((this@apply.end * 1000 - this@apply.start * 1000 + fadeMilliseconds).roundToLong())
         }
         trackSections.sections.drop(1).forEach { sectionToPlay ->
             spotifyClient.seekPlaybackPosition((sectionToPlay.start * 1000).roundToInt())
-            runBlocking {
-                delay((sectionToPlay.end * 1000 - sectionToPlay.start * 1000 - fadeMilliseconds).roundToLong())
-            }
+            delay((sectionToPlay.end * 1000 - sectionToPlay.start * 1000 - fadeMilliseconds).roundToLong())
         }
         playbackVolumeAdjuster.fadeOut(playbackDetails.selectedDeviceVolumePercent)
     }

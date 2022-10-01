@@ -4,7 +4,7 @@ import dgounaris.dionysus.playback.models.PlaybackDetails
 import dgounaris.dionysus.tracks.models.TrackSections
 
 interface PlaybackExecutor {
-    fun playSongSections(
+    suspend fun playSongSections(
         trackSections: TrackSections,
         playbackVolumeAdjusterStrategy: PlaybackVolumeAdjusterStrategy,
         playbackDetails: PlaybackDetails

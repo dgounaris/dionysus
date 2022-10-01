@@ -1,21 +1,19 @@
 package dgounaris.dionysus.playback
 
 import dgounaris.dionysus.clients.SpotifyClient
-import dgounaris.dionysus.playback.models.AvailableDevice
-import dgounaris.dionysus.playback.models.PlaybackDetails
-import dgounaris.dionysus.playback.models.PlaybackPlanItem
+import dgounaris.dionysus.playback.models.*
 import dgounaris.dionysus.tracks.models.TrackSectionStartEnd
 import dgounaris.dionysus.tracks.models.TrackSections
 import kotlinx.coroutines.runBlocking
 import kotlin.math.max
 import kotlin.math.min
 
-class SectionMergingPlaybackHandler(
+class SectionMergingPlaybackOrchestrator(
     private val spotifyClient: SpotifyClient,
     private val playbackVolumeAdjusterStrategy: PlaybackVolumeAdjusterStrategy,
     private val playbackPlanMediator: PlaybackPlanMediator,
     private val playbackExecutor: PlaybackExecutor
-    ) : PlaybackHandler {
+    ) : PlaybackOrchestrator {
 
     override fun getAvailableDevices() : List<AvailableDevice> {
         val availableDevices = spotifyClient.getAvailableDevices()
@@ -24,22 +22,30 @@ class SectionMergingPlaybackHandler(
             .toList()
     }
 
-    override fun play(tracksSections: List<TrackSections>, playbackDetails: PlaybackDetails) {
+    override fun play(userId: String, tracksSections: List<TrackSections>, playbackDetails: PlaybackDetails) {
         val mergedTrackSectionsList = tracksSections.map { findSongSectionsToPlay(it) }
         val currentTime = System.currentTimeMillis()
         var delayFromPrevious = 0.0
         mergedTrackSectionsList.map {
-            val item = PlaybackPlanItem("", currentTime + (delayFromPrevious * 1000).toLong(), it, playbackDetails)
+            val item = PlaybackPlanItem(userId, currentTime + (delayFromPrevious * 1000).toLong(), it, playbackDetails)
             delayFromPrevious += (it.sections.lastOrNull()?.end ?: 0.0) - (it.sections.firstOrNull()?.start ?: 0.0)
             return@map item
         }.forEach {
             playbackPlanMediator.save(it)
         }
-        // todo replace this with passing a playbackPlanMediator reference
-        //mergedTrackSectionsList.forEach { mergedTrackSections ->
-        //    playbackExecutor.playSongSections(mergedTrackSections, playbackVolumeAdjusterStrategy, playbackDetails)
-        //}
-        runBlocking { playbackExecutor.play("", playbackPlanMediator, playbackVolumeAdjusterStrategy) }
+        runBlocking { playbackExecutor.play(userId, playbackPlanMediator, playbackVolumeAdjusterStrategy) }
+    }
+
+    override fun onPauseEvent(userId: String) {
+        playbackPlanMediator.save(PlaybackEvent(userId, PlaybackEventType.PAUSE))
+    }
+
+    override fun onResumeEvent(userId: String) {
+        playbackPlanMediator.save(PlaybackEvent(userId, PlaybackEventType.RESUME))
+    }
+
+    override fun onStopEvent(userId: String) {
+        playbackPlanMediator.save(PlaybackEvent(userId, PlaybackEventType.STOP))
     }
 
     private fun findSongSectionsToPlay(trackSections: TrackSections): TrackSections {

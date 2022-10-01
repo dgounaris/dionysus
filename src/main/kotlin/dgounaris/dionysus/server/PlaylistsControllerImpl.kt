@@ -2,7 +2,7 @@ package dgounaris.dionysus.server
 
 import dgounaris.dionysus.auth.AuthorizationController
 import dgounaris.dionysus.common.parallelMap
-import dgounaris.dionysus.playback.PlaybackHandler
+import dgounaris.dionysus.playback.PlaybackOrchestrator
 import dgounaris.dionysus.playlists.PlaylistDetailsProvider
 import dgounaris.dionysus.tracks.TrackDetailsProvider
 import dgounaris.dionysus.tracks.models.TrackDetails
@@ -19,7 +19,7 @@ import kotlinx.html.*
 
 class PlaylistsControllerImpl(
     private var playlistDetailsProvider: PlaylistDetailsProvider,
-    private val playbackHandler: PlaybackHandler,
+    private val playbackOrchestrator: PlaybackOrchestrator,
     private val trackDetailsProvider: TrackDetailsProvider,
     private val authorizationController: AuthorizationController
     ) : PlaylistsController {
@@ -53,7 +53,7 @@ class PlaylistsControllerImpl(
         val playlistResponse = PlaylistResponseDto(
             playlist.name, playlist.id, playlistTrackDetails
         )
-        val availablePlaybackDevices = playbackHandler.getAvailableDevices()
+        val availablePlaybackDevices = playbackOrchestrator.getAvailableDevices()
         playlistTracksView(html, playlistResponse, availablePlaybackDevices)
     }
 

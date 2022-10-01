@@ -5,10 +5,9 @@ import dgounaris.dionysus.common.parallelMap
 import dgounaris.dionysus.dionysense.FeedbackHandler
 import dgounaris.dionysus.dionysense.TrackOrderSelector
 import dgounaris.dionysus.dionysense.TrackSectionSelector
-import dgounaris.dionysus.playback.PlaybackHandler
+import dgounaris.dionysus.playback.PlaybackOrchestrator
 import dgounaris.dionysus.playback.models.PlaybackDetails
 import dgounaris.dionysus.playlists.PlaylistDetailsProvider
-import dgounaris.dionysus.tracks.models.TrackSection
 import dgounaris.dionysus.tracks.models.TrackSectionStartEnd
 import dgounaris.dionysus.tracks.models.TrackSections
 import dgounaris.dionysus.view.postAutoplayView
@@ -26,7 +25,7 @@ class PlaybackControllerImpl(
     private val playlistDetailsProvider: PlaylistDetailsProvider,
     private val trackSectionSelector: TrackSectionSelector,
     private val trackOrderSelector: TrackOrderSelector,
-    private val playbackHandler: PlaybackHandler,
+    private val playbackOrchestrator: PlaybackOrchestrator,
     private val feedbackHandler: FeedbackHandler,
     private val authorizationController: AuthorizationController
     ): PlaybackController {
@@ -64,7 +63,7 @@ class PlaybackControllerImpl(
         val trackSections = targetSections.map {
             TrackSections(it.first, it.second.map { section -> TrackSectionStartEnd(section.start, section.end) })
         }
-        thread { playbackHandler.play(trackSections, playbackDetails) }
+        thread { playbackOrchestrator.play("", trackSections, playbackDetails) }
         responseAutoplayStartedOk(html)
     }
 
