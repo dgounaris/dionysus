@@ -41,6 +41,18 @@ class PlaybackControllerImpl(
             post("/playback/feedback") {
                 submitFeedback()
             }
+            post("/playback/stop") {
+
+            }
+            post("/playback/pause") {
+
+            }
+            post("/playback/resume") {
+
+            }
+            post("/playback/next") {
+
+            }
         }
     }
 

@@ -13,4 +13,5 @@ interface PlaybackOrchestrator {
     fun onPauseEvent(userId: String)
     fun onResumeEvent(userId: String)
     fun onStopEvent(userId: String)
+    fun onNextEvent(userId: String)
 }

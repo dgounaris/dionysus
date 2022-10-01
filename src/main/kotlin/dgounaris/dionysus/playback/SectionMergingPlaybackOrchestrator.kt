@@ -48,6 +48,10 @@ class SectionMergingPlaybackOrchestrator(
         playbackPlanMediator.save(PlaybackEvent(userId, PlaybackEventType.STOP))
     }
 
+    override fun onNextEvent(userId: String) {
+        playbackPlanMediator.save(PlaybackEvent(userId, PlaybackEventType.NEXT))
+    }
+
     private fun findSongSectionsToPlay(trackSections: TrackSections): TrackSections {
         val distinctOrderedSections = trackSections.sections
             .sortedBy { section -> section.start }

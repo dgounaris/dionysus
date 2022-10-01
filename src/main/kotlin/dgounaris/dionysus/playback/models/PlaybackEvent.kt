@@ -8,5 +8,6 @@ data class PlaybackEvent(
 enum class PlaybackEventType {
     PAUSE,
     STOP,
-    RESUME
+    RESUME,
+    NEXT
 }
