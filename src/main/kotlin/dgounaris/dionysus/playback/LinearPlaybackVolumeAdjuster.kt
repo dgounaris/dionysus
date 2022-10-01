@@ -10,8 +10,8 @@ class LinearPlaybackVolumeAdjuster(
     private val spotifyClient: SpotifyClient
     ) : PlaybackVolumeAdjuster {
 
-    private val fadeMilliseconds = 200
-    private val volumeChangeIntervalMilliseconds = 20
+    private val fadeMilliseconds = 150
+    private val volumeChangeIntervalMilliseconds = 30
     private val volumeReduction = 30
 
     override fun getFadeMilliseconds(): Int = fadeMilliseconds

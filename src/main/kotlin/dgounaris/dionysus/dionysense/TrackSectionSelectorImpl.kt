@@ -4,7 +4,7 @@ import dgounaris.dionysus.tracks.TrackDetailsProvider
 import dgounaris.dionysus.tracks.models.TrackSection
 
 class TrackSectionSelectorImpl(private val trackDetailsProvider: TrackDetailsProvider) : TrackSectionSelector {
-    private val perSideTotalDuration = 60
+    private val perSideTotalDuration = 40
 
     override suspend fun selectSections(trackId: String) : List<TrackSection> {
         val sections = trackDetailsProvider.getTrackDetails(trackId).sections

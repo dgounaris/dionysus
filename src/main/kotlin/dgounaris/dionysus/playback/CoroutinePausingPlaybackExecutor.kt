@@ -27,11 +27,7 @@ class CoroutinePausingPlaybackExecutor(
             spotifyClient.playTrack(trackSections.id, playbackDetails.selectedDeviceId, effectiveStartTime)
             playbackVolumeAdjuster.fadeIn(playbackDetails.selectedDeviceVolumePercent)
             runBlocking {
-                if (trackSections.sections.size == 1) {
-                    delay((this@apply.end * 1000 - this@apply.start * 1000 - fadeMilliseconds).roundToLong())
-                } else {
-                    delay((this@apply.end * 1000 - this@apply.start * 1000).roundToLong())
-                }
+                delay((this@apply.end * 1000 - this@apply.start * 1000 + fadeMilliseconds).roundToLong())
             }
         }
         trackSections.sections.drop(1).forEach { sectionToPlay ->
@@ -46,8 +42,10 @@ class CoroutinePausingPlaybackExecutor(
     override suspend fun play(user: String, playbackPlanMediator: PlaybackPlanMediator, playbackVolumeAdjusterStrategy: PlaybackVolumeAdjusterStrategy) {
         coroutineScope {
             async {
-                playbackPlanMediator.getNextPlanItem(user)?.let {
-                    playSongSections(it.trackSections, playbackVolumeAdjusterStrategy, it.playbackDetails)
+                while (true) {
+                    playbackPlanMediator.getNextPlanItem(user)?.let {
+                        playSongSections(it.trackSections, playbackVolumeAdjusterStrategy, it.playbackDetails)
+                    } ?: break
                 }
             }
         }
