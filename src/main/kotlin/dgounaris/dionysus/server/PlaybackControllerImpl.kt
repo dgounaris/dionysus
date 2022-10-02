@@ -42,16 +42,20 @@ class PlaybackControllerImpl(
                 submitFeedback()
             }
             post("/playback/stop") {
-
+                val formParameters = call.receiveParameters()
+                call.respondHtml { stopPlayback(formParameters, this) }
             }
             post("/playback/pause") {
-
+                val formParameters = call.receiveParameters()
+                call.respondHtml { pausePlayback(formParameters, this) }
             }
             post("/playback/resume") {
-
+                val formParameters = call.receiveParameters()
+                call.respondHtml { resumePlayback(formParameters, this) }
             }
             post("/playback/next") {
-
+                val formParameters = call.receiveParameters()
+                call.respondHtml { nextPlayback(formParameters, this) }
             }
         }
     }
@@ -77,6 +81,22 @@ class PlaybackControllerImpl(
         }
         thread { playbackOrchestrator.play("", trackSections, playbackDetails) }
         responseAutoplayStartedOk(html)
+    }
+
+    private fun stopPlayback(params: Parameters, html: HTML) {
+        thread { playbackOrchestrator.onStopEvent("") }
+    }
+
+    private fun pausePlayback(params: Parameters, html: HTML) {
+        thread { playbackOrchestrator.onPauseEvent("") }
+    }
+
+    private fun resumePlayback(params: Parameters, html: HTML) {
+        thread { playbackOrchestrator.onResumeEvent("") }
+    }
+
+    private fun nextPlayback(params: Parameters, html: HTML) {
+        thread { playbackOrchestrator.onNextEvent("") }
     }
 
     private fun submitFeedback() {

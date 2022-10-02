@@ -9,5 +9,6 @@ enum class PlaybackEventType {
     PAUSE,
     STOP,
     RESUME,
-    NEXT
+    NEXT,
+    START
 }

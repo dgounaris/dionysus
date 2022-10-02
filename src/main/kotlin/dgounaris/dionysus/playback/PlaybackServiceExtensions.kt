@@ -6,7 +6,8 @@ val playbackModule = module {
     single<PlaybackVolumeAdjusterStrategy> { PlaybackVolumeAdjusterStrategyImpl(get()) }
     single<PlaybackStatusPollingService> { PlaybackStatusShortPollingService(get()) }
     single<PlaybackVolumeAdjuster> { LinearPlaybackVolumeAdjuster(get()) }
-    single<PlaybackOrchestrator> { SectionMergingPlaybackOrchestrator(get(), get(), get(), get()) }
-    single<PlaybackExecutor> { CoroutinePausingPlaybackExecutor(get()) }
+    single<PlaybackOrchestrator> { SectionMergingPlaybackOrchestrator(get(), get(), get()) }
+    single<PlaybackExecutor> { CoroutinePausingPlaybackExecutor(get(), get(), get()) }
     single<PlaybackPlanMediator> { SimplePlaybackPlanMediator() }
+    single<PlaybackEventHandler> { SimplePlaybackEventHandler(get()) }
 }

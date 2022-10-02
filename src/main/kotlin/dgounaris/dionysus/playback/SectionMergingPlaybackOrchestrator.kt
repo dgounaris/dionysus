@@ -4,15 +4,13 @@ import dgounaris.dionysus.clients.SpotifyClient
 import dgounaris.dionysus.playback.models.*
 import dgounaris.dionysus.tracks.models.TrackSectionStartEnd
 import dgounaris.dionysus.tracks.models.TrackSections
-import kotlinx.coroutines.runBlocking
 import kotlin.math.max
 import kotlin.math.min
 
 class SectionMergingPlaybackOrchestrator(
     private val spotifyClient: SpotifyClient,
-    private val playbackVolumeAdjusterStrategy: PlaybackVolumeAdjusterStrategy,
     private val playbackPlanMediator: PlaybackPlanMediator,
-    private val playbackExecutor: PlaybackExecutor
+    private val playbackEventHandler: PlaybackEventHandler
     ) : PlaybackOrchestrator {
 
     override fun getAvailableDevices() : List<AvailableDevice> {
@@ -33,23 +31,23 @@ class SectionMergingPlaybackOrchestrator(
         }.forEach {
             playbackPlanMediator.save(it)
         }
-        runBlocking { playbackExecutor.play(userId, playbackPlanMediator, playbackVolumeAdjusterStrategy) }
+        playbackEventHandler.pushEvent(PlaybackEvent("", PlaybackEventType.START))
     }
 
     override fun onPauseEvent(userId: String) {
-        playbackPlanMediator.save(PlaybackEvent(userId, PlaybackEventType.PAUSE))
+        playbackEventHandler.pushEvent(PlaybackEvent(userId, PlaybackEventType.PAUSE))
     }
 
     override fun onResumeEvent(userId: String) {
-        playbackPlanMediator.save(PlaybackEvent(userId, PlaybackEventType.RESUME))
+        playbackEventHandler.pushEvent(PlaybackEvent(userId, PlaybackEventType.RESUME))
     }
 
     override fun onStopEvent(userId: String) {
-        playbackPlanMediator.save(PlaybackEvent(userId, PlaybackEventType.STOP))
+        playbackEventHandler.pushEvent(PlaybackEvent(userId, PlaybackEventType.STOP))
     }
 
     override fun onNextEvent(userId: String) {
-        playbackPlanMediator.save(PlaybackEvent(userId, PlaybackEventType.NEXT))
+        playbackEventHandler.pushEvent(PlaybackEvent(userId, PlaybackEventType.NEXT))
     }
 
     private fun findSongSectionsToPlay(trackSections: TrackSections): TrackSections {
