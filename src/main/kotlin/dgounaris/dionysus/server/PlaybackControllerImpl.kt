@@ -42,18 +42,30 @@ class PlaybackControllerImpl(
                 submitFeedback()
             }
             post("/playback/stop") {
+                if (!authorizationController.isAuthorized("")) {
+                    return@post call.respond(HttpStatusCode.Unauthorized)
+                }
                 val formParameters = call.receiveParameters()
                 call.respondHtml { stopPlayback(formParameters, this) }
             }
             post("/playback/pause") {
+                if (!authorizationController.isAuthorized("")) {
+                    return@post call.respond(HttpStatusCode.Unauthorized)
+                }
                 val formParameters = call.receiveParameters()
                 call.respondHtml { pausePlayback(formParameters, this) }
             }
             post("/playback/resume") {
+                if (!authorizationController.isAuthorized("")) {
+                    return@post call.respond(HttpStatusCode.Unauthorized)
+                }
                 val formParameters = call.receiveParameters()
                 call.respondHtml { resumePlayback(formParameters, this) }
             }
             post("/playback/next") {
+                if (!authorizationController.isAuthorized("")) {
+                    return@post call.respond(HttpStatusCode.Unauthorized)
+                }
                 val formParameters = call.receiveParameters()
                 call.respondHtml { nextPlayback(formParameters, this) }
             }
@@ -84,19 +96,19 @@ class PlaybackControllerImpl(
     }
 
     private fun stopPlayback(params: Parameters, html: HTML) {
-        thread { playbackOrchestrator.onStopEvent("") }
+        playbackOrchestrator.onStopEvent("")
     }
 
     private fun pausePlayback(params: Parameters, html: HTML) {
-        thread { playbackOrchestrator.onPauseEvent("") }
+        playbackOrchestrator.onPauseEvent("")
     }
 
     private fun resumePlayback(params: Parameters, html: HTML) {
-        thread { playbackOrchestrator.onResumeEvent("") }
+        playbackOrchestrator.onResumeEvent("")
     }
 
     private fun nextPlayback(params: Parameters, html: HTML) {
-        thread { playbackOrchestrator.onNextEvent("") }
+        playbackOrchestrator.onNextEvent("")
     }
 
     private fun submitFeedback() {

@@ -13,6 +13,7 @@ interface SpotifyClient {
     suspend fun getTrackAudioFeatures(trackId: String) : TrackAudioFeaturesResponseDto
     fun playTrack(trackId: String, deviceId: String, positionMs: Int? = null) : String
     fun startPlayback(deviceId: String): String
+    fun pausePlayback(): String
     fun getTrack(trackId: String): TrackResponseDto
     fun playNext() : String
     fun addToPlaybackQueue(trackId: String) : String

@@ -173,6 +173,19 @@ class SpotifyClientImpl(
         response.receive()
     }
 
+    override fun pausePlayback(): String = runBlocking {
+        val response : HttpResponse = httpClient.put("https://api.spotify.com/v1/me/player/pause") {
+            header("Authorization", "Bearer ${getAccessToken()}")
+            accept(ContentType.Application.Json)
+            contentType(ContentType.Application.Json)
+        }
+        if (response.status.value == 401) {
+            refreshToken()
+            return@runBlocking pausePlayback()
+        }
+        response.receive()
+    }
+
     override fun addToPlaybackQueue(trackId: String): String = runBlocking {
         val response : HttpResponse = httpClient.post("https://api.spotify.com/v1/me/player/queue") {
             header("Authorization", "Bearer ${getAccessToken()}")

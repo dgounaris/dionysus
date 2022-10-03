@@ -1,6 +1,8 @@
 package dgounaris.dionysus.playback
 
 import dgounaris.dionysus.playback.models.PlaybackEvent
+import kotlinx.coroutines.runBlocking
+import kotlin.concurrent.thread
 import kotlin.properties.Delegates
 
 interface PlaybackEventHandler {
@@ -11,7 +13,7 @@ class SimplePlaybackEventHandler(private val playbackExecutor: PlaybackExecutor)
     private var event : PlaybackEvent? by Delegates.observable(
         null
     ) {
-            _, _, newEvent -> playbackExecutor.handleEvent(newEvent!!)
+            _, _, newEvent -> thread { runBlocking { playbackExecutor.handleEvent(newEvent!!) } }
     }
 
     override fun pushEvent(playbackEvent: PlaybackEvent) {

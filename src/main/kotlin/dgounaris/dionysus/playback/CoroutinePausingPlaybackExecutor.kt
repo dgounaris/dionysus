@@ -20,7 +20,30 @@ class CoroutinePausingPlaybackExecutor(
     private val playbackVolumeAdjusterStrategy: PlaybackVolumeAdjusterStrategy,
     private val spotifyClient: SpotifyClient
 ) : PlaybackExecutor {
-    override suspend fun playSongSections(
+    override suspend fun handleEvent(playbackEvent: PlaybackEvent) {
+        when (playbackEvent.eventType) {
+            PlaybackEventType.START ->  { play(playbackEvent.user) }
+            PlaybackEventType.STOP -> { /* todo stop playback, reset playback plan queue */ }
+            PlaybackEventType.PAUSE -> { spotifyClient.pausePlayback() }
+            PlaybackEventType.RESUME -> { play(playbackEvent.user) }
+            PlaybackEventType.NEXT -> { /* todo skip track */ }
+        }
+    }
+
+    private suspend fun play(user: String) {
+        /* todo make this interruptable, stop and pause need to stop this */
+        coroutineScope {
+            async {
+                while (true) {
+                    playbackPlanMediator.getNextPlanItem(user)?.let {
+                        playSongSections(it.trackSections, it.playbackDetails)
+                    } ?: break
+                }
+            }
+        }
+    }
+
+    private suspend fun playSongSections(
         trackSections: TrackSections,
         playbackDetails: PlaybackDetails
     ) {
@@ -43,29 +66,5 @@ class CoroutinePausingPlaybackExecutor(
             delay((sectionToPlay.end * 1000 - sectionToPlay.start * 1000 - fadeMilliseconds).roundToLong())
         }
         playbackVolumeAdjuster.fadeOut(playbackDetails.selectedDeviceVolumePercent)
-    }
-
-    override suspend fun play(user: String) {
-        coroutineScope {
-            async {
-                while (true) {
-                    playbackPlanMediator.getNextPlanItem(user)?.let {
-                        playSongSections(it.trackSections, it.playbackDetails)
-                    } ?: break
-                }
-            }
-        }
-    }
-
-    override fun handleEvent(playbackEvent: PlaybackEvent) {
-        runBlocking {
-            when (playbackEvent.eventType) {
-                PlaybackEventType.START ->  { play(playbackEvent.user) }
-                PlaybackEventType.STOP -> { /* todo stop playback, reset playback plan queue */ }
-                PlaybackEventType.PAUSE -> { /* todo stop playback */ }
-                PlaybackEventType.RESUME -> { play(playbackEvent.user) }
-                PlaybackEventType.NEXT -> { /* todo skip track */ }
-            }
-        }
     }
 }
