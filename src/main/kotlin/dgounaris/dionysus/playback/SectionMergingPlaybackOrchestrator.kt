@@ -29,7 +29,7 @@ class SectionMergingPlaybackOrchestrator(
             delayFromPrevious += (it.sections.lastOrNull()?.end ?: 0.0) - (it.sections.firstOrNull()?.start ?: 0.0)
             return@map item
         }.forEach {
-            playbackPlanMediator.save(it)
+            playbackPlanMediator.savePlaybackPlanItem(it)
         }
         playbackEventHandler.pushEvent(PlaybackEvent("", PlaybackEventType.START))
     }

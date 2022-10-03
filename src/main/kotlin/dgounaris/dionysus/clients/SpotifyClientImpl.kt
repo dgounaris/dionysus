@@ -173,15 +173,15 @@ class SpotifyClientImpl(
         response.receive()
     }
 
-    override fun pausePlayback(): String = runBlocking {
+    override fun pausePlayback(userId: String): String = runBlocking {
         val response : HttpResponse = httpClient.put("https://api.spotify.com/v1/me/player/pause") {
-            header("Authorization", "Bearer ${getAccessToken()}")
+            header("Authorization", "Bearer ${getAccessToken(userId)}")
             accept(ContentType.Application.Json)
             contentType(ContentType.Application.Json)
         }
         if (response.status.value == 401) {
             refreshToken()
-            return@runBlocking pausePlayback()
+            return@runBlocking pausePlayback(userId)
         }
         response.receive()
     }
@@ -294,6 +294,9 @@ class SpotifyClientImpl(
 
     private fun getAccessToken() : String? =
         userStorage.getBySpotifyUserId("")?.accessToken
+
+    private fun getAccessToken(userId: String) : String? =
+        userStorage.getBySpotifyUserId(userId)?.accessToken
 
     private fun getRefreshToken() : String? =
         userStorage.getBySpotifyUserId("")?.refreshToken

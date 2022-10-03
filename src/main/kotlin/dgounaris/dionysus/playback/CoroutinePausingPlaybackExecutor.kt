@@ -5,41 +5,53 @@ import dgounaris.dionysus.playback.models.PlaybackDetails
 import dgounaris.dionysus.playback.models.PlaybackEvent
 import dgounaris.dionysus.playback.models.PlaybackEventType
 import dgounaris.dionysus.tracks.models.TrackSections
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
-import kotlin.concurrent.thread
+import kotlinx.coroutines.*
 import kotlin.math.max
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
-import kotlin.properties.Delegates
 
 class CoroutinePausingPlaybackExecutor(
     private val playbackPlanMediator: PlaybackPlanMediator,
     private val playbackVolumeAdjusterStrategy: PlaybackVolumeAdjusterStrategy,
     private val spotifyClient: SpotifyClient
 ) : PlaybackExecutor {
+    /* todo all the event handlings should use a lock to avoid multithreading interference between pause/queue operations etc */
+
     override suspend fun handleEvent(playbackEvent: PlaybackEvent) {
         when (playbackEvent.eventType) {
             PlaybackEventType.START ->  { play(playbackEvent.user) }
-            PlaybackEventType.STOP -> { /* todo stop playback, reset playback plan queue */ }
-            PlaybackEventType.PAUSE -> { spotifyClient.pausePlayback() }
+            PlaybackEventType.STOP -> { stop(playbackEvent.user) }
+            PlaybackEventType.PAUSE -> { pause(playbackEvent.user) }
             PlaybackEventType.RESUME -> { play(playbackEvent.user) }
-            PlaybackEventType.NEXT -> { /* todo skip track */ }
+            PlaybackEventType.NEXT -> { next(playbackEvent.user) }
         }
     }
 
+    private fun stop(userId: String) {
+        playbackPlanMediator.getActivePlaybackJob(userId)?.cancel("Stop event occurred")
+        playbackPlanMediator.clearPlaybackPlanQueue(userId)
+        spotifyClient.pausePlayback(userId)
+    }
+
+    private suspend fun next(userId: String) {
+        playbackPlanMediator.getActivePlaybackJob(userId)?.cancel("Next event occurred")
+        play(userId)
+    }
+
+    private fun pause(userId: String) {
+        playbackPlanMediator.getActivePlaybackJob(userId)?.cancel("Pause event occurred")
+        spotifyClient.pausePlayback(userId)
+    }
+
     private suspend fun play(user: String) {
-        /* todo make this interruptable, stop and pause need to stop this */
         coroutineScope {
-            async {
+            launch {
                 while (true) {
                     playbackPlanMediator.getNextPlanItem(user)?.let {
                         playSongSections(it.trackSections, it.playbackDetails)
                     } ?: break
                 }
-            }
+            }.also { playbackPlanMediator.saveActivePlaybackJob(user, it) }
         }
     }
 

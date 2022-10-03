@@ -97,18 +97,22 @@ class PlaybackControllerImpl(
 
     private fun stopPlayback(params: Parameters, html: HTML) {
         playbackOrchestrator.onStopEvent("")
+        postAutoplayView(html)
     }
 
     private fun pausePlayback(params: Parameters, html: HTML) {
         playbackOrchestrator.onPauseEvent("")
+        postAutoplayView(html)
     }
 
     private fun resumePlayback(params: Parameters, html: HTML) {
         playbackOrchestrator.onResumeEvent("")
+        postAutoplayView(html)
     }
 
     private fun nextPlayback(params: Parameters, html: HTML) {
         playbackOrchestrator.onNextEvent("")
+        postAutoplayView(html)
     }
 
     private fun submitFeedback() {
