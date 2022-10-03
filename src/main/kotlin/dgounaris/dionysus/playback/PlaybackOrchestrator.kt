@@ -8,7 +8,7 @@ import dgounaris.dionysus.tracks.models.TrackSections
 import dgounaris.dionysus.user.models.User
 
 interface PlaybackOrchestrator {
-    fun getAvailableDevices() : List<AvailableDevice>
+    fun getAvailableDevices(userId: String) : List<AvailableDevice>
     fun play(userId: String, tracksSections: List<TrackSections>, playbackDetails: PlaybackDetails)
     fun onPauseEvent(userId: String)
     fun onResumeEvent(userId: String)

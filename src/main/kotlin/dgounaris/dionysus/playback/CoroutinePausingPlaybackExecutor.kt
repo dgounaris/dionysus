@@ -43,19 +43,20 @@ class CoroutinePausingPlaybackExecutor(
         spotifyClient.pausePlayback(userId)
     }
 
-    private suspend fun play(user: String) {
+    private suspend fun play(userId: String) {
         coroutineScope {
             launch {
                 while (true) {
-                    playbackPlanMediator.getNextPlanItem(user)?.let {
-                        playSongSections(it.trackSections, it.playbackDetails)
+                    playbackPlanMediator.getNextPlanItem(userId)?.let {
+                        playSongSections(userId, it.trackSections, it.playbackDetails)
                     } ?: break
                 }
-            }.also { playbackPlanMediator.saveActivePlaybackJob(user, it) }
+            }.also { playbackPlanMediator.saveActivePlaybackJob(userId, it) }
         }
     }
 
     private suspend fun playSongSections(
+        userId: String,
         trackSections: TrackSections,
         playbackDetails: PlaybackDetails
     ) {
@@ -64,7 +65,7 @@ class CoroutinePausingPlaybackExecutor(
         trackSections.sections.firstOrNull()?.apply {
             val effectiveStartTime = max((this@apply.start * 1000).toInt() - fadeMilliseconds, 0)
             playbackVolumeAdjuster.prepareFadeIn(playbackDetails.selectedDeviceVolumePercent)
-            spotifyClient.playTrack(trackSections.id, playbackDetails.selectedDeviceId, effectiveStartTime)
+            spotifyClient.playTrack(userId, trackSections.id, playbackDetails.selectedDeviceId, effectiveStartTime)
             playbackVolumeAdjuster.fadeIn(playbackDetails.selectedDeviceVolumePercent)
             if (trackSections.sections.size == 1) {
                 delay((this@apply.end * 1000 - this@apply.start * 1000 - fadeMilliseconds).roundToLong())

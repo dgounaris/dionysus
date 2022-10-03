@@ -5,6 +5,6 @@ import io.ktor.application.*
 
 interface AuthorizationController {
     fun configureRouting(application: Application)
-
+    fun getCurrentUserId(): String
     fun isAuthorized(user: String): Boolean
 }

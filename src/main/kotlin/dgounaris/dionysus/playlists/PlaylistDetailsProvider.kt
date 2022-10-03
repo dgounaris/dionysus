@@ -3,6 +3,6 @@ package dgounaris.dionysus.playlists
 import dgounaris.dionysus.playlists.models.Playlist
 
 interface PlaylistDetailsProvider {
-    fun getCurrentUserPlaylistNames() : List<String>
-    fun getPlaylistDetails(playlistName: String) : Playlist
+    fun getUserPlaylistNames(userId: String) : List<String>
+    fun getPlaylistDetails(userId: String, playlistName: String) : Playlist
 }

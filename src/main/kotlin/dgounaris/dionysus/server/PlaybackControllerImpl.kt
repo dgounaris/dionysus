@@ -80,7 +80,7 @@ class PlaybackControllerImpl(
             targetDeviceDetails.split("-")[2].toInt()
         )
         val playlistName = params.entries().single { it.key.startsWith("playlistId_") }.value.single()
-        val targetPlaylist = playlistDetailsProvider.getPlaylistDetails(playlistName)
+        val targetPlaylist = playlistDetailsProvider.getPlaylistDetails(authorizationController.getCurrentUserId(), playlistName)
         val targetTracksWithCustomOrder = runBlocking { trackOrderSelector.selectOrder(targetPlaylist.tracks.map { it.id }) }
         val targetSections = runBlocking {
             targetTracksWithCustomOrder
@@ -91,27 +91,27 @@ class PlaybackControllerImpl(
         val trackSections = targetSections.map {
             TrackSections(it.first, it.second.map { section -> TrackSectionStartEnd(section.start, section.end) })
         }
-        thread { playbackOrchestrator.play("", trackSections, playbackDetails) }
+        thread { playbackOrchestrator.play(authorizationController.getCurrentUserId(), trackSections, playbackDetails) }
         responseAutoplayStartedOk(html)
     }
 
     private fun stopPlayback(params: Parameters, html: HTML) {
-        playbackOrchestrator.onStopEvent("")
+        playbackOrchestrator.onStopEvent(authorizationController.getCurrentUserId())
         postAutoplayView(html)
     }
 
     private fun pausePlayback(params: Parameters, html: HTML) {
-        playbackOrchestrator.onPauseEvent("")
+        playbackOrchestrator.onPauseEvent(authorizationController.getCurrentUserId())
         postAutoplayView(html)
     }
 
     private fun resumePlayback(params: Parameters, html: HTML) {
-        playbackOrchestrator.onResumeEvent("")
+        playbackOrchestrator.onResumeEvent(authorizationController.getCurrentUserId())
         postAutoplayView(html)
     }
 
     private fun nextPlayback(params: Parameters, html: HTML) {
-        playbackOrchestrator.onNextEvent("")
+        playbackOrchestrator.onNextEvent(authorizationController.getCurrentUserId())
         postAutoplayView(html)
     }
 

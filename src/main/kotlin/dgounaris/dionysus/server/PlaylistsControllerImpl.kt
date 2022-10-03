@@ -43,7 +43,7 @@ class PlaylistsControllerImpl(
     }
 
     private fun getPlaylistTracks(playlistName: String, html: HTML) {
-        val playlist = playlistDetailsProvider.getPlaylistDetails(playlistName)
+        val playlist = playlistDetailsProvider.getPlaylistDetails(authorizationController.getCurrentUserId(), playlistName)
         val playlistTrackDetails = runBlocking {
             playlist.tracks.parallelMap { track ->
                 val trackDetails = trackDetailsProvider.getTrackDetails(track.id)
@@ -53,12 +53,12 @@ class PlaylistsControllerImpl(
         val playlistResponse = PlaylistResponseDto(
             playlist.name, playlist.id, playlistTrackDetails
         )
-        val availablePlaybackDevices = playbackOrchestrator.getAvailableDevices()
+        val availablePlaybackDevices = playbackOrchestrator.getAvailableDevices(authorizationController.getCurrentUserId())
         playlistTracksView(html, playlistResponse, availablePlaybackDevices)
     }
 
     private fun getCurrentUserPlaylists(html: HTML) {
-        val currentUserPlaylists = playlistDetailsProvider.getCurrentUserPlaylistNames()
+        val currentUserPlaylists = playlistDetailsProvider.getUserPlaylistNames(authorizationController.getCurrentUserId())
         currentUserPlaylistsSelectionView(html, currentUserPlaylists)
     }
 }

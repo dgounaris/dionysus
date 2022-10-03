@@ -36,6 +36,10 @@ class AuthorizationControllerImpl(
         return userStorage.getBySpotifyUserId("") != null
     }
 
+    override fun getCurrentUserId(): String {
+        return ""
+    }
+
     private fun login(html: HTML) {
         val authUrl = spotifyClient.getAuthorizeUrl()
         loginView(html, authUrl)

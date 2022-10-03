@@ -13,8 +13,8 @@ class SectionMergingPlaybackOrchestrator(
     private val playbackEventHandler: PlaybackEventHandler
     ) : PlaybackOrchestrator {
 
-    override fun getAvailableDevices() : List<AvailableDevice> {
-        val availableDevices = spotifyClient.getAvailableDevices()
+    override fun getAvailableDevices(userId: String) : List<AvailableDevice> {
+        val availableDevices = spotifyClient.getAvailableDevices(userId)
         return availableDevices.devices
             .map { device -> AvailableDevice(device.id, device.name, device.type, device.is_active, device.volume_percent) }
             .toList()

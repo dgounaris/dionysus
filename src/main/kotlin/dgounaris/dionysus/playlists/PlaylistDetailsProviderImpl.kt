@@ -7,14 +7,14 @@ import dgounaris.dionysus.tracks.models.Track
 class PlaylistDetailsProviderImpl(
     private val spotifyClient: SpotifyClient
     ) : PlaylistDetailsProvider {
-    override fun getCurrentUserPlaylistNames() : List<String> {
-        return spotifyClient.getCurrentUserPlaylists().items.map { playlistItem ->
+    override fun getUserPlaylistNames(userId: String) : List<String> {
+        return spotifyClient.getUserPlaylists(userId).items.map { playlistItem ->
             playlistItem.name
         }
     }
 
-    override fun getPlaylistDetails(playlistName: String) : Playlist {
-        val currentUserPlaylists = spotifyClient.getCurrentUserPlaylists()
+    override fun getPlaylistDetails(userId: String, playlistName: String) : Playlist {
+        val currentUserPlaylists = spotifyClient.getUserPlaylists(userId)
         val selectedPlaylist = currentUserPlaylists.items.first { playlistItem ->
             playlistItem.name == playlistName
         }
