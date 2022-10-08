@@ -171,6 +171,6 @@ gradle-app.setting
 
 # End of https://www.toptal.com/developers/gitignore/api/intellij,kotlin,java,gradle
 
-dionysus_cache
+dionysus_cache_old
 
 **/dev.app.properties

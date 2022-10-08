@@ -1,5 +1,5 @@
 package dgounaris.dionysus.dionysense
 
 interface TrackOrderSelector {
-    suspend fun selectOrder(trackIds: List<String>) : List<String>
+    suspend fun selectOrder(userId: String, trackIds: List<String>) : List<String>
 }

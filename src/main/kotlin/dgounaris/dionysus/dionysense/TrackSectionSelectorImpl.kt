@@ -2,29 +2,49 @@ package dgounaris.dionysus.dionysense
 
 import dgounaris.dionysus.tracks.TrackDetailsProvider
 import dgounaris.dionysus.tracks.models.TrackSection
+import dgounaris.dionysus.tracks.models.TrackSections
 
 class TrackSectionSelectorImpl(private val trackDetailsProvider: TrackDetailsProvider) : TrackSectionSelector {
     private val perSideTotalDuration = 40
 
-    override suspend fun selectSections(trackId: String) : List<TrackSection> {
-        val sections = trackDetailsProvider.getTrackDetails(trackId).sections
-        val selectedSections = mutableListOf<TrackSection>()
+    override suspend fun selectSections(userId: String, trackId: String) : List<TrackSection> {
+        val sections = trackDetailsProvider.getTrackDetails(userId, trackId).sections
 
-        val pivotSection = (sections
-            .mapIndexed { index, trackSection -> Pair(index, trackSection) }
-            .sortedByDescending { it.second.loudness }
-            .firstOrNull { it.second.confidence > 0.5 } ?: return emptyList())
-            .also { selectedSections.add(it.second) }
+        val selSections1 = test1(sections)
 
-        val duration = selectedSections.sumOf { it.duration }
+        return if (selSections1.contains(sections.last())) {
+            selSections1.dropLast(1) + selSections1.last().copy(end = selSections1.last().end - 4)
+        } else {
+            selSections1
+        }.also {
+            println("Dionysense TrackSelection: TrackId: $trackId, Sections: ${it.joinToString(" ") { "[${it.start}-${it.end}]" }}")
+        }
+    }
 
-        selectedSections.addAll(
-                selectPreviousSections(sections, pivotSection.first - 1, duration) +
-                selectSubsequentSections(sections, pivotSection.first + 1, duration))
+    private fun test1(sections: List<TrackSection>) : List<TrackSection> {
+        val sortedSections = sections.sortedBy { it.start }
+        val sectionGroups = test1helpRev(sortedSections).mapIndexed { i, it ->
+            listOf(it) + test1help(sortedSections, i)
+        }
+        return sectionGroups.maxByOrNull { group -> group.sumOf { section -> section.loudness }/group.size }!!
+    }
 
-        println("Dionysense TrackSelection: TrackId: $trackId, Sections: ${selectedSections.joinToString(" ") { "[${it.start}-${it.end}]" }}")
+    private fun test1helpRev(sections: List<TrackSection>): List<TrackSection> {
+        var duration = 0.0
+        var lookbackIndex = sections.lastIndex - 1
+        return sections.dropLastWhile { section ->
+            (lookbackIndex != -1 && duration + section.duration + sections[lookbackIndex].duration < 100).also {
+            duration += section.duration
+            lookbackIndex -= 1
+        } }
+    }
 
-        return selectedSections
+    private fun test1help(sections: List<TrackSection>, currentIndex: Int): List<TrackSection> {
+        var duration = sections[currentIndex].duration
+        return sections.drop(currentIndex+1).takeWhile { section ->
+            (duration + section.duration <= 100 || duration < 75)
+                .also { duration += section.duration }
+        }
     }
 
     private fun selectPreviousSections(sections: List<TrackSection>, evaluatedIndex: Int, duration: Double): List<TrackSection> {

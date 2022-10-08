@@ -9,25 +9,25 @@ class TrackDetailsProviderImpl(
     private val tracksStorage: TracksStorage
     ) : TrackDetailsProvider {
 
-    override suspend fun getTrackDetails(trackId: String) : TrackDetails {
+    override suspend fun getTrackDetails(userId: String, trackId: String) : TrackDetails {
         val persistedDetails = tracksStorage.getTrackDetails(trackId)
         if (persistedDetails != null) {
             return persistedDetails
         }
-        val track = spotifyClient.getTrack(trackId)
+        val track = spotifyClient.getTrack(userId, trackId)
         return TrackDetails(
             track.id,
             track.name,
-            getTrackAnalysis(track.id) ?: emptyList(),
-            getTrackFeatures(track.id)
+            getTrackAnalysis(userId, track.id) ?: emptyList(),
+            getTrackFeatures(userId, track.id)
         ).also { tracksStorage.save(it) }
          .also {
             println("Track ${track.name} id: ${track.id}")
         }
     }
 
-    private suspend fun getTrackAnalysis(trackId: String) : List<TrackSection>? {
-        val analysis = spotifyClient.getTrackAudioAnalysis(trackId)
+    private suspend fun getTrackAnalysis(userId: String, trackId: String) : List<TrackSection>? {
+        val analysis = spotifyClient.getTrackAudioAnalysis(userId, trackId)
         return analysis?.sections?.map { TrackSection(
             it.start,
             it.duration,
@@ -37,12 +37,12 @@ class TrackDetailsProviderImpl(
             it.tempo,
             it.key,
             it.mode,
-            it.timeSignature
+            it.time_signature
         ) }
     }
 
-    private suspend fun getTrackFeatures(trackId: String) : TrackAudioFeatures {
-        val features = spotifyClient.getTrackAudioFeatures(trackId)
+    private suspend fun getTrackFeatures(userId: String, trackId: String) : TrackAudioFeatures {
+        val features = spotifyClient.getTrackAudioFeatures(userId, trackId)
         return TrackAudioFeatures(
             features.acousticness,
             features.danceability,

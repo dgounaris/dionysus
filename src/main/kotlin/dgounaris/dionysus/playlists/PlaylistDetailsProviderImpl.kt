@@ -18,7 +18,7 @@ class PlaylistDetailsProviderImpl(
         val selectedPlaylist = currentUserPlaylists.items.first { playlistItem ->
             playlistItem.name == playlistName
         }
-        val playlistTracks = spotifyClient.getPlaylistTracks(selectedPlaylist.id)
+        val playlistTracks = spotifyClient.getPlaylistTracks(userId, selectedPlaylist.id)
         return Playlist(
             selectedPlaylist.name,
             selectedPlaylist.id,

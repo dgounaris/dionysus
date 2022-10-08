@@ -73,19 +73,6 @@ class SpotifyClientImpl(
         userStorage.save(User("", content.accessToken, refreshToken))
     }
 
-    override fun getCurrentUser() : String = runBlocking {
-        TODO("Not yet implemented")
-        val response : HttpResponse = httpClient.get("https://api.spotify.com/v1/me") {
-            header("Authorization", "Bearer ${getAccessToken()}")
-            accept(ContentType.Application.Json)
-        }
-        if (response.status.value == 401) {
-            refreshToken()
-            return@runBlocking getCurrentUser()
-        }
-        response.receive()
-    }
-
     override fun getUserPlaylists(userId: String) : CurrentUserPlaylistsResponseDto = runBlocking {
             val response : HttpResponse = httpClient.get("https://api.spotify.com/v1/me/playlists") {
                 header("Authorization", "Bearer ${getAccessToken(userId)}")
@@ -98,22 +85,22 @@ class SpotifyClientImpl(
             response.receive()
         }
 
-    override fun getPlaylistTracks(playlistId: String) : PlaylistTracksResponseDto = runBlocking {
+    override fun getPlaylistTracks(userId: String, playlistId: String) : PlaylistTracksResponseDto = runBlocking {
             val response : HttpResponse = httpClient.get("https://api.spotify.com/v1/playlists/$playlistId/tracks") {
-                header("Authorization", "Bearer ${getAccessToken()}")
+                header("Authorization", "Bearer ${getAccessToken(userId)}")
                 accept(ContentType.Application.Json)
             }
             if (response.status.value == 401) {
                 refreshToken()
-                return@runBlocking getPlaylistTracks(playlistId)
+                return@runBlocking getPlaylistTracks(userId, playlistId)
             }
             response.receive()
         }
 
-    override suspend fun getTrackAudioAnalysis(trackId: String) : TrackAudioAnalysisResponseDto? =
+    override suspend fun getTrackAudioAnalysis(userId: String, trackId: String) : TrackAudioAnalysisResponseDto? =
         executeWithCache("getTrackAudioAnalysis_$trackId") {
             val response : HttpResponse = httpClient.get("https://api.spotify.com/v1/audio-analysis/$trackId") {
-                header("Authorization", "Bearer ${getAccessToken()}")
+                header("Authorization", "Bearer ${getAccessToken(userId)}")
                 accept(ContentType.Application.Json)
             }
             if (response.status.value == 404) {
@@ -121,20 +108,20 @@ class SpotifyClientImpl(
             }
             if (response.status.value == 401) {
                 refreshToken()
-                return getTrackAudioAnalysis(trackId)
+                return getTrackAudioAnalysis(userId, trackId)
             }
             response.receive()
         }
 
-    override suspend fun getTrackAudioFeatures(trackId: String) : TrackAudioFeaturesResponseDto =
+    override suspend fun getTrackAudioFeatures(userId: String, trackId: String) : TrackAudioFeaturesResponseDto =
         executeWithCache("getTrackAudioFeatures_$trackId") {
             val response : HttpResponse = httpClient.get("https://api.spotify.com/v1/audio-features/$trackId") {
-                header("Authorization", "Bearer ${getAccessToken()}")
+                header("Authorization", "Bearer ${getAccessToken(userId)}")
                 accept(ContentType.Application.Json)
             }
             if (response.status.value == 401) {
                 refreshToken()
-                return getTrackAudioFeatures(trackId)
+                return getTrackAudioFeatures(userId, trackId)
             }
             response.receive()
         }
@@ -172,42 +159,42 @@ class SpotifyClientImpl(
         response.receive()
     }
 
-    override fun getTrack(trackId: String): TrackResponseDto =
+    override fun getTrack(userId: String, trackId: String): TrackResponseDto =
         executeWithCache("getTrack_$trackId") {
             runBlocking {
                 val response : HttpResponse = httpClient.get("https://api.spotify.com/v1/tracks/$trackId") {
-                    header("Authorization", "Bearer ${getAccessToken()}")
+                    header("Authorization", "Bearer ${getAccessToken(userId)}")
                     accept(ContentType.Application.Json)
                 }
                 if (response.status.value == 401) {
                     refreshToken()
-                    return@runBlocking getTrack(trackId)
+                    return@runBlocking getTrack(userId, trackId)
                 }
                 response.receive()
             }
         }
 
-    override fun seekPlaybackPosition(positionMs: Int) : String = runBlocking {
+    override fun seekPlaybackPosition(userId: String, positionMs: Int) : String = runBlocking {
         val response : HttpResponse = httpClient.put("https://api.spotify.com/v1/me/player/seek") {
-            header("Authorization", "Bearer ${getAccessToken()}")
+            header("Authorization", "Bearer ${getAccessToken(userId)}")
             parameter("position_ms", positionMs)
             accept(ContentType.Application.Json)
         }
         if (response.status.value == 401) {
             refreshToken()
-            return@runBlocking seekPlaybackPosition(positionMs)
+            return@runBlocking seekPlaybackPosition(userId, positionMs)
         }
         response.receive()
     }
 
-    override fun getPlaybackState() : GetPlaybackStateResponseDto? = runBlocking {
+    override fun getPlaybackState(userId: String) : GetPlaybackStateResponseDto? = runBlocking {
         val response : HttpResponse = httpClient.get("https://api.spotify.com/v1/me/player") {
-            header("Authorization", "Bearer ${getAccessToken()}")
+            header("Authorization", "Bearer ${getAccessToken(userId)}")
             accept(ContentType.Application.Json)
         }
         if (response.status.value == 401) {
             refreshToken()
-            return@runBlocking getPlaybackState()
+            return@runBlocking getPlaybackState(userId)
         }
         if (response.status.value == 204) {
             return@runBlocking null
@@ -215,15 +202,15 @@ class SpotifyClientImpl(
         response.receive()
     }
 
-    override fun setVolume(volumePercent: Int) : String = runBlocking {
+    override fun setVolume(userId: String, volumePercent: Int) : String = runBlocking {
         val response : HttpResponse = httpClient.put("https://api.spotify.com/v1/me/player/volume") {
-            header("Authorization", "Bearer ${getAccessToken()}")
+            header("Authorization", "Bearer ${getAccessToken(userId)}")
             parameter("volume_percent", volumePercent)
             accept(ContentType.Application.Json)
         }
         if (response.status.value == 401) {
             refreshToken()
-            return@runBlocking setVolume(volumePercent)
+            return@runBlocking setVolume(userId, volumePercent)
         }
         response.receive()
     }
@@ -251,9 +238,6 @@ class SpotifyClientImpl(
         cache.store(cacheKey, response)
         return response
     }
-
-    private fun getAccessToken() : String? =
-        userStorage.getBySpotifyUserId("")?.accessToken
 
     private fun getAccessToken(userId: String) : String? =
         userStorage.getBySpotifyUserId(userId)?.accessToken

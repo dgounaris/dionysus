@@ -14,13 +14,13 @@ class FeedbackHandlerImpl(
     private val spotifyClient: SpotifyClient
     ) : FeedbackHandler {
 
-    override fun handleFeedback() {
-        val playbackState = spotifyClient.getPlaybackState() ?: run {
+    override fun handleFeedback(userId: String) {
+        val playbackState = spotifyClient.getPlaybackState(userId) ?: run {
             println("No active playback")
             return
         }
         val trackDetails = runBlocking {
-            trackDetailsProvider.getTrackDetails(playbackState.item.id)
+            trackDetailsProvider.getTrackDetails(userId, playbackState.item.id)
         }
         try {
             val directoryName = ".\\dionysus_feedback\\"

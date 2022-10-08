@@ -1,5 +1,5 @@
 package dgounaris.dionysus.dionysense
 
 interface FeedbackHandler {
-    fun handleFeedback()
+    fun handleFeedback(userId: String)
 }

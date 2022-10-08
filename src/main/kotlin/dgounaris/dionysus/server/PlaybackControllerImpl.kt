@@ -73,6 +73,7 @@ class PlaybackControllerImpl(
     }
 
     private fun autoplay(params: Parameters, html: HTML) {
+        val userId = authorizationController.getCurrentUserId()
         val targetDeviceDetails = params.entries().single { it.key == "device_select" }.value.single()
         val playbackDetails = PlaybackDetails(
             targetDeviceDetails.split("-")[0],
@@ -81,11 +82,11 @@ class PlaybackControllerImpl(
         )
         val playlistName = params.entries().single { it.key.startsWith("playlistId_") }.value.single()
         val targetPlaylist = playlistDetailsProvider.getPlaylistDetails(authorizationController.getCurrentUserId(), playlistName)
-        val targetTracksWithCustomOrder = runBlocking { trackOrderSelector.selectOrder(targetPlaylist.tracks.map { it.id }) }
+        val targetTracksWithCustomOrder = runBlocking { trackOrderSelector.selectOrder(userId, targetPlaylist.tracks.map { it.id }) }
         val targetSections = runBlocking {
             targetTracksWithCustomOrder
                 .parallelMap { trackId ->
-                    Pair(trackId, trackSectionSelector.selectSections(trackId))
+                    Pair(trackId, trackSectionSelector.selectSections(userId, trackId))
                 }
         }
         val trackSections = targetSections.map {
@@ -116,7 +117,8 @@ class PlaybackControllerImpl(
     }
 
     private fun submitFeedback() {
-        feedbackHandler.handleFeedback()
+        val userId = authorizationController.getCurrentUserId()
+        feedbackHandler.handleFeedback(userId)
     }
 
     private fun responseAutoplayStartedOk(html: HTML) {

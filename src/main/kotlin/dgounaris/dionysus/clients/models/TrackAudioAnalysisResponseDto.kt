@@ -12,5 +12,5 @@ data class TrackAnalysisSection(
     val tempo : Double,
     val key : Int,
     val mode : Int,
-    val timeSignature : Int
+    val time_signature : Int
 )

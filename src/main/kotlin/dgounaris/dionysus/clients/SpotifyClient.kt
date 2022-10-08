@@ -6,16 +6,15 @@ interface SpotifyClient {
     fun getAuthorizeUrl() : String
     fun getTokens(code: String)
     fun refreshToken()
-    fun getCurrentUser() : String
     fun getUserPlaylists(userId: String) : CurrentUserPlaylistsResponseDto
-    fun getPlaylistTracks(playlistId: String) : PlaylistTracksResponseDto
-    suspend fun getTrackAudioAnalysis(trackId: String) : TrackAudioAnalysisResponseDto?
-    suspend fun getTrackAudioFeatures(trackId: String) : TrackAudioFeaturesResponseDto
+    fun getPlaylistTracks(userId: String, playlistId: String) : PlaylistTracksResponseDto
+    suspend fun getTrackAudioAnalysis(userId: String, trackId: String) : TrackAudioAnalysisResponseDto?
+    suspend fun getTrackAudioFeatures(userId: String, trackId: String) : TrackAudioFeaturesResponseDto
     fun playTrack(userId: String, trackId: String, deviceId: String, positionMs: Int? = null) : String
     fun pausePlayback(userId: String): String
-    fun getTrack(trackId: String): TrackResponseDto
-    fun seekPlaybackPosition(positionMs: Int) : String
-    fun getPlaybackState() : GetPlaybackStateResponseDto?
-    fun setVolume(volumePercent: Int) : String
+    fun getTrack(userId: String, trackId: String): TrackResponseDto
+    fun seekPlaybackPosition(userId: String, positionMs: Int) : String
+    fun getPlaybackState(userId: String) : GetPlaybackStateResponseDto?
+    fun setVolume(userId: String, volumePercent: Int) : String
     fun getAvailableDevices(userId: String) : GetAvailableDevicesResponseDto
 }

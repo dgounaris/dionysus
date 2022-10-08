@@ -25,7 +25,9 @@ class TracksControllerImpl(
         }
     }
 
-    private fun analyzeTrack(trackId: String) =
-        runBlocking { spotifyClient.getTrackAudioAnalysis(trackId) }
+    private fun analyzeTrack(trackId: String) = runBlocking {
+            val userId = authorizationController.getCurrentUserId()
+            spotifyClient.getTrackAudioAnalysis(userId, trackId)
+        }
 
 }

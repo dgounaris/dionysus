@@ -3,12 +3,12 @@ package dgounaris.dionysus.playback
 class NoopPlaybackVolumeAdjuster : PlaybackVolumeAdjuster {
     override fun getFadeMilliseconds(): Int = 0
 
-    override fun fadeOut(baselineVolume: Int) {
+    override fun fadeOut(userId: String, baselineVolume: Int) {
     }
 
-    override fun prepareFadeIn(baselineVolume: Int) {
+    override fun prepareFadeIn(userId: String, baselineVolume: Int) {
     }
 
-    override fun fadeIn(baselineVolume: Int) {
+    override fun fadeIn(userId: String, baselineVolume: Int) {
     }
 }

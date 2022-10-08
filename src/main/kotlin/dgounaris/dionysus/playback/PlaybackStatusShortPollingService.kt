@@ -4,8 +4,8 @@ import dgounaris.dionysus.clients.SpotifyClient
 import dgounaris.dionysus.playback.models.PlaybackState
 
 class PlaybackStatusShortPollingService(private val spotifyClient: SpotifyClient) : PlaybackStatusPollingService {
-    override fun pollPlaybackStatus(): PlaybackState? {
-        val playbackState = spotifyClient.getPlaybackState() ?: return null
+    override fun pollPlaybackStatus(userId: String): PlaybackState? {
+        val playbackState = spotifyClient.getPlaybackState(userId) ?: return null
         return PlaybackState(
             playbackState.device.id,
             playbackState.device.name,
