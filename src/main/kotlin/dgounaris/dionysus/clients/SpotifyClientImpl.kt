@@ -42,6 +42,13 @@ class SpotifyClientImpl(
                 "&redirect_uri=http%3A%2F%2Flocalhost%3A8888%2Fcallback"
     }
 
+    override fun authorize(): String = runBlocking {
+        httpClient.get("https://accounts.spotify.com/authorize?response_type=code" +
+                "&client_id=$clientId" +
+                "&scope=user-read-private+user-read-email+playlist-read-private+user-modify-playback-state+user-read-playback-state" +
+                "&redirect_uri=http%3A%2F%2Flocalhost%3A8888%2Fcallback")
+    }
+
     override fun getTokens(code: String) = runBlocking {
             val response : HttpResponse = httpClient.post("https://accounts.spotify.com/api/token") {
                 header("Authorization", "Basic ${Base64.getEncoder().encodeToString("$clientId:$clientSecret".toByteArray())}")

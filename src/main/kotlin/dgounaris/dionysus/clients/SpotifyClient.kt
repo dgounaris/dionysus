@@ -4,6 +4,7 @@ import dgounaris.dionysus.clients.models.*
 
 interface SpotifyClient {
     fun getAuthorizeUrl() : String
+    fun authorize(): String
     fun getTokens(code: String)
     fun refreshToken()
     fun getUserPlaylists(userId: String) : CurrentUserPlaylistsResponseDto

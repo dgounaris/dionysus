@@ -24,6 +24,9 @@ class AuthorizationControllerImpl(
                     login(this)
                 }
             }
+            get("/v1/login") {
+                call.respondRedirect(spotifyClient.getAuthorizeUrl())
+            }
             get("/callback") {
                 callback(call.request.queryParameters["code"]!!, call.request.queryParameters["state"])
 

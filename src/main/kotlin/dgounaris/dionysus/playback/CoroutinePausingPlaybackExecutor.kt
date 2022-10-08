@@ -48,7 +48,12 @@ class CoroutinePausingPlaybackExecutor(
             launch {
                 while (true) {
                     playbackPlanMediator.getNextPlanItem(userId)?.let {
-                        playSongSections(userId, it.trackSections, it.playbackDetails)
+                        val playbackDetails = it.playbackDetails
+                        val playbackVolumeAdjuster = async { playbackVolumeAdjusterStrategy.getVolumeAdjuster(playbackDetails) }
+                        val playAsync = async { playSongSections(userId, it.trackSections, it.playbackDetails) }
+                        playbackVolumeAdjuster.await().fadeIn(userId, playbackDetails.selectedDeviceVolumePercent)
+                        playAsync.await()
+                        playbackVolumeAdjuster.await().fadeOut(userId, playbackDetails.selectedDeviceVolumePercent)
                     } ?: break
                 }
             }.also { playbackPlanMediator.saveActivePlaybackJob(userId, it) }
@@ -60,24 +65,14 @@ class CoroutinePausingPlaybackExecutor(
         trackSections: TrackSections,
         playbackDetails: PlaybackDetails
     ) {
-        val playbackVolumeAdjuster = playbackVolumeAdjusterStrategy.getVolumeAdjuster(playbackDetails)
-        val fadeMilliseconds = playbackVolumeAdjuster.getFadeMilliseconds()
         trackSections.sections.firstOrNull()?.apply {
-            val effectiveStartTime = max((this@apply.start * 1000).toInt() - fadeMilliseconds, 0)
-            playbackVolumeAdjuster.prepareFadeIn(userId, playbackDetails.selectedDeviceVolumePercent)
+            val effectiveStartTime = max((this@apply.start * 1000).toInt(), 0)
             spotifyClient.playTrack(userId, trackSections.id, playbackDetails.selectedDeviceId, effectiveStartTime)
-            playbackVolumeAdjuster.fadeIn(userId, playbackDetails.selectedDeviceVolumePercent)
-            if (trackSections.sections.size == 1) {
-                delay((this@apply.end * 1000 - this@apply.start * 1000 - fadeMilliseconds).roundToLong())
-            } else {
-                delay((this@apply.end * 1000 - this@apply.start * 1000).roundToLong())
-            }
+            delay((this@apply.end * 1000 - this@apply.start * 1000).roundToLong())
         }
         trackSections.sections.drop(1).forEach { sectionToPlay ->
             spotifyClient.seekPlaybackPosition(userId, (sectionToPlay.start * 1000).roundToInt())
-            // this needs to be "- fadeMilliseconds" only for the last element
-            delay((sectionToPlay.end * 1000 - sectionToPlay.start * 1000 - fadeMilliseconds).roundToLong())
+            delay((sectionToPlay.end * 1000 - sectionToPlay.start * 1000).roundToLong())
         }
-        playbackVolumeAdjuster.fadeOut(userId, playbackDetails.selectedDeviceVolumePercent)
     }
 }
