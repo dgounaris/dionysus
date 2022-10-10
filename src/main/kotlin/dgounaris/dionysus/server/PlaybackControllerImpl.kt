@@ -6,6 +6,7 @@ import dgounaris.dionysus.dionysense.FeedbackHandler
 import dgounaris.dionysus.dionysense.TrackOrderSelector
 import dgounaris.dionysus.dionysense.TrackSectionSelector
 import dgounaris.dionysus.playback.PlaybackOrchestrator
+import dgounaris.dionysus.playback.models.AvailableDevice
 import dgounaris.dionysus.playback.models.PlaybackDetails
 import dgounaris.dionysus.playlists.PlaylistDetailsProvider
 import dgounaris.dionysus.tracks.models.TrackSectionStartEnd
@@ -31,12 +32,26 @@ class PlaybackControllerImpl(
     ): PlaybackController {
     override fun configureRouting(application: Application) {
         application.routing {
+            get("/v1/playback/devices") {
+                if (!authorizationController.isAuthorized("")) {
+                    return@get call.respond(HttpStatusCode.Unauthorized)
+                }
+                call.respond(getAvailablePlaybackDevicesV1())
+            }
             post("/playback/play/auto") {
                 if (!authorizationController.isAuthorized("")) {
                     return@post call.respond(HttpStatusCode.Unauthorized)
                 }
                 val formParameters = call.receiveParameters()
                 call.respondHtml { autoplay(formParameters, this) }
+            }
+            post("/v1/playback/play/auto") {
+                if (!authorizationController.isAuthorized("")) {
+                    return@post call.respond(HttpStatusCode.Unauthorized)
+                }
+                val requestBody = call.receive<AutoplayRequestDto>()
+                autoplayV1(requestBody)
+                call.respond(HttpStatusCode.OK)
             }
             post("/playback/feedback") {
                 submitFeedback()
@@ -48,12 +63,26 @@ class PlaybackControllerImpl(
                 val formParameters = call.receiveParameters()
                 call.respondHtml { stopPlayback(formParameters, this) }
             }
+            post("/v1/playback/stop") {
+                if (!authorizationController.isAuthorized("")) {
+                    return@post call.respond(HttpStatusCode.Unauthorized)
+                }
+                stopPlaybackV1(authorizationController.getCurrentUserId())
+                call.respond(HttpStatusCode.OK)
+            }
             post("/playback/pause") {
                 if (!authorizationController.isAuthorized("")) {
                     return@post call.respond(HttpStatusCode.Unauthorized)
                 }
                 val formParameters = call.receiveParameters()
                 call.respondHtml { pausePlayback(formParameters, this) }
+            }
+            post("/v1/playback/pause") {
+                if (!authorizationController.isAuthorized("")) {
+                    return@post call.respond(HttpStatusCode.Unauthorized)
+                }
+                pausePlaybackV1(authorizationController.getCurrentUserId())
+                call.respond(HttpStatusCode.OK)
             }
             post("/playback/resume") {
                 if (!authorizationController.isAuthorized("")) {
@@ -62,6 +91,13 @@ class PlaybackControllerImpl(
                 val formParameters = call.receiveParameters()
                 call.respondHtml { resumePlayback(formParameters, this) }
             }
+            post("/v1/playback/resume") {
+                if (!authorizationController.isAuthorized("")) {
+                    return@post call.respond(HttpStatusCode.Unauthorized)
+                }
+                resumePlaybackV1(authorizationController.getCurrentUserId())
+                call.respond(HttpStatusCode.OK)
+            }
             post("/playback/next") {
                 if (!authorizationController.isAuthorized("")) {
                     return@post call.respond(HttpStatusCode.Unauthorized)
@@ -69,7 +105,19 @@ class PlaybackControllerImpl(
                 val formParameters = call.receiveParameters()
                 call.respondHtml { nextPlayback(formParameters, this) }
             }
+            post("/v1/playback/next") {
+                if (!authorizationController.isAuthorized("")) {
+                    return@post call.respond(HttpStatusCode.Unauthorized)
+                }
+                nextPlaybackV1(authorizationController.getCurrentUserId())
+                call.respond(HttpStatusCode.OK)
+            }
         }
+    }
+
+    private fun getAvailablePlaybackDevicesV1() : List<AvailableDevice> {
+        val userId = authorizationController.getCurrentUserId()
+        return playbackOrchestrator.getAvailableDevices(userId)
     }
 
     private fun autoplay(params: Parameters, html: HTML) {
@@ -96,9 +144,32 @@ class PlaybackControllerImpl(
         responseAutoplayStartedOk(html)
     }
 
+    private fun autoplayV1(body: AutoplayRequestDto) {
+        val userId = authorizationController.getCurrentUserId()
+        val playbackDetails = body.playbackDetails
+        val playlistName = body.playlistName
+
+        val targetPlaylist = playlistDetailsProvider.getPlaylistDetails(userId, playlistName)
+        val targetTracksWithCustomOrder = runBlocking { trackOrderSelector.selectOrder(userId, targetPlaylist.tracks.map { it.id }) }
+        val targetSections = runBlocking {
+            targetTracksWithCustomOrder
+                .parallelMap { trackId ->
+                    Pair(trackId, trackSectionSelector.selectSections(userId, trackId))
+                }
+        }
+        val trackSections = targetSections.map {
+            TrackSections(it.first, it.second.map { section -> TrackSectionStartEnd(section.start, section.end) })
+        }
+        thread { playbackOrchestrator.play(userId, trackSections, playbackDetails) }
+    }
+
     private fun stopPlayback(params: Parameters, html: HTML) {
         playbackOrchestrator.onStopEvent(authorizationController.getCurrentUserId())
         postAutoplayView(html)
+    }
+
+    private fun stopPlaybackV1(userId: String) {
+        playbackOrchestrator.onStopEvent(userId)
     }
 
     private fun pausePlayback(params: Parameters, html: HTML) {
@@ -106,14 +177,26 @@ class PlaybackControllerImpl(
         postAutoplayView(html)
     }
 
+    private fun pausePlaybackV1(userId: String) {
+        playbackOrchestrator.onPauseEvent(userId)
+    }
+
     private fun resumePlayback(params: Parameters, html: HTML) {
         playbackOrchestrator.onResumeEvent(authorizationController.getCurrentUserId())
         postAutoplayView(html)
     }
 
+    private fun resumePlaybackV1(userId: String) {
+        playbackOrchestrator.onResumeEvent(userId)
+    }
+
     private fun nextPlayback(params: Parameters, html: HTML) {
         playbackOrchestrator.onNextEvent(authorizationController.getCurrentUserId())
         postAutoplayView(html)
+    }
+
+    private fun nextPlaybackV1(userId: String) {
+        playbackOrchestrator.onNextEvent(userId)
     }
 
     private fun submitFeedback() {
@@ -125,3 +208,8 @@ class PlaybackControllerImpl(
         postAutoplayView(html)
     }
 }
+
+data class AutoplayRequestDto(
+    val playbackDetails: PlaybackDetails,
+    val playlistName: String
+)

@@ -39,6 +39,20 @@ class PlaylistsControllerImpl(
                 }
                 call.respondHtml { getCurrentUserPlaylists(this) }
             }
+            get("/v1/playlists/me") {
+                if (!authorizationController.isAuthorized("")) {
+                    return@get call.respond(HttpStatusCode.Unauthorized)
+                }
+                call.respond(getCurrentUserPlaylistsV1())
+            }
+            get("/v1/playlists/tracks") {
+                if (!authorizationController.isAuthorized("")) {
+                    return@get call.respond(HttpStatusCode.Unauthorized)
+                }
+                val playlistId = call.request.queryParameters["playlistName"]
+                    ?: call.receiveParameters()["playlistName"]!!
+                call.respond(getPlaylistTracksV1(playlistId))
+            }
         }
     }
 
@@ -62,6 +76,26 @@ class PlaylistsControllerImpl(
         val userId = authorizationController.getCurrentUserId()
         val currentUserPlaylists = playlistDetailsProvider.getUserPlaylistNames(userId)
         currentUserPlaylistsSelectionView(html, currentUserPlaylists)
+    }
+
+    private fun getCurrentUserPlaylistsV1() : List<String> {
+        val userId = authorizationController.getCurrentUserId()
+        return playlistDetailsProvider.getUserPlaylistNames(userId)
+    }
+
+    private fun getPlaylistTracksV1(playlistName: String) : PlaylistResponseDto {
+        val userId = authorizationController.getCurrentUserId()
+        val playlist = playlistDetailsProvider.getPlaylistDetails(userId, playlistName)
+        val playlistTrackDetails = runBlocking {
+            playlist.tracks.parallelMap { track ->
+                val trackDetails = trackDetailsProvider.getTrackDetails(userId, track.id)
+                trackDetails.toTrackDetailsResponseDto()
+            }
+        }
+        val playlistResponse = PlaylistResponseDto(
+            playlist.name, playlist.id, playlistTrackDetails
+        )
+        return playlistResponse
     }
 }
 

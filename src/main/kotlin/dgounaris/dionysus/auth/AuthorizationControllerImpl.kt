@@ -1,8 +1,8 @@
 package dgounaris.dionysus.auth
 
 import dgounaris.dionysus.clients.SpotifyClient
+import dgounaris.dionysus.common.PropertiesProvider
 import dgounaris.dionysus.storage.user.UserStorage
-import dgounaris.dionysus.user.models.User
 import dgounaris.dionysus.view.loginView
 import io.ktor.application.*
 import io.ktor.html.*
@@ -30,7 +30,7 @@ class AuthorizationControllerImpl(
             get("/callback") {
                 callback(call.request.queryParameters["code"]!!, call.request.queryParameters["state"])
 
-                call.respondRedirect("http://localhost:8888/playlists/me", false)
+                call.respondRedirect(PropertiesProvider.configuration.getProperty("spotifyCallbackUrl"), false)
             }
         }
     }
