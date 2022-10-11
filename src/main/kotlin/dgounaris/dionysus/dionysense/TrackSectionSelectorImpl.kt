@@ -10,26 +10,26 @@ class TrackSectionSelectorImpl(private val trackDetailsProvider: TrackDetailsPro
     override suspend fun selectSections(userId: String, trackId: String) : List<TrackSection> {
         val sections = trackDetailsProvider.getTrackDetails(userId, trackId).sections
 
-        val selSections1 = test1(sections)
+        val selectedSections = selectSectionsByBestSectionGroup(sections)
 
-        return if (selSections1.contains(sections.last())) {
-            selSections1.dropLast(1) + selSections1.last().copy(end = selSections1.last().end - 4)
+        return if (selectedSections.contains(sections.last())) {
+            selectedSections.dropLast(1) + selectedSections.last().copy(end = selectedSections.last().end - 4)
         } else {
-            selSections1
+            selectedSections
         }.also {
             println("Dionysense TrackSelection: TrackId: $trackId, Sections: ${it.joinToString(" ") { "[${it.start}-${it.end}]" }}")
         }
     }
 
-    private fun test1(sections: List<TrackSection>) : List<TrackSection> {
+    private fun selectSectionsByBestSectionGroup(sections: List<TrackSection>) : List<TrackSection> {
         val sortedSections = sections.sortedBy { it.start }
-        val sectionGroups = test1helpRev(sortedSections).mapIndexed { i, it ->
-            listOf(it) + test1help(sortedSections, i)
+        val sectionGroups = filterOutSectionsThatCanNotGenerateGroup(sortedSections).mapIndexed { i, it ->
+            listOf(it) + CreateGroupFromSections(sortedSections, i)
         }
         return sectionGroups.maxByOrNull { group -> group.sumOf { section -> section.loudness }/group.size }!!
     }
 
-    private fun test1helpRev(sections: List<TrackSection>): List<TrackSection> {
+    private fun filterOutSectionsThatCanNotGenerateGroup(sections: List<TrackSection>): List<TrackSection> {
         var duration = 0.0
         var lookbackIndex = sections.lastIndex - 1
         return sections.dropLastWhile { section ->
@@ -39,7 +39,7 @@ class TrackSectionSelectorImpl(private val trackDetailsProvider: TrackDetailsPro
         } }
     }
 
-    private fun test1help(sections: List<TrackSection>, currentIndex: Int): List<TrackSection> {
+    private fun CreateGroupFromSections(sections: List<TrackSection>, currentIndex: Int): List<TrackSection> {
         var duration = sections[currentIndex].duration
         return sections.drop(currentIndex+1).takeWhile { section ->
             (duration + section.duration <= 100 || duration < 75)

@@ -49,7 +49,7 @@ class SpotifyClientImpl(
                 "&redirect_uri=http%3A%2F%2Flocalhost%3A8888%2Fcallback")
     }
 
-    override fun getTokens(code: String) = runBlocking {
+    override fun getTokens(code: String) : String = runBlocking {
             val response : HttpResponse = httpClient.post("https://accounts.spotify.com/api/token") {
                 header("Authorization", "Basic ${Base64.getEncoder().encodeToString("$clientId:$clientSecret".toByteArray())}")
                 body = FormDataContent(Parameters.build {
@@ -60,13 +60,13 @@ class SpotifyClientImpl(
                 accept(ContentType.Application.Json)
             }
             val content : AuthorizationResponseDto = response.receive()
-            println("Access token: ${content.accessToken}")
-            println("Refresh token: ${content.refreshToken}")
-            userStorage.save(User("", content.accessToken, content.refreshToken))
+            val userId = getCurrentUserId(content.accessToken, content.refreshToken)!!
+            userStorage.save(User(userId, content.accessToken, content.refreshToken))
+            userId
         }
 
-    override fun refreshToken() = runBlocking {
-        val refreshToken = getRefreshToken()
+    override fun refreshToken(userId: String) = runBlocking {
+        val refreshToken = getRefreshToken(userId)
         val response : HttpResponse = httpClient.post("https://accounts.spotify.com/api/token") {
             header("Authorization", "Basic ${Base64.getEncoder().encodeToString("$clientId:$clientSecret".toByteArray())}")
             body = FormDataContent(Parameters.build {
@@ -76,8 +76,19 @@ class SpotifyClientImpl(
             accept(ContentType.Application.Json)
         }
         val content : RefreshTokenResponseDto = response.receive()
-        println("Access token: ${content.accessToken}")
-        userStorage.save(User("", content.accessToken, refreshToken))
+        userStorage.save(User(userId, content.accessToken, refreshToken))
+    }
+
+    private suspend fun getCurrentUserId(accessToken: String, refreshToken: String) : String? {
+        val response : HttpResponse = httpClient.get("https://api.spotify.com/v1/me") {
+            header("Authorization", "Bearer $accessToken")
+            accept(ContentType.Application.Json)
+        }
+        if (response.status.value == 401) {
+            return null // todo handle this a bit more gracefully
+        }
+        val currentUser = response.receive<CurrentUserResponseDto>()
+        return currentUser.id
     }
 
     override fun getUserPlaylists(userId: String) : CurrentUserPlaylistsResponseDto = runBlocking {
@@ -86,7 +97,7 @@ class SpotifyClientImpl(
                 accept(ContentType.Application.Json)
             }
             if (response.status.value == 401) {
-                refreshToken()
+                refreshToken(userId)
                 return@runBlocking getUserPlaylists(userId)
             }
             response.receive()
@@ -98,7 +109,7 @@ class SpotifyClientImpl(
                 accept(ContentType.Application.Json)
             }
             if (response.status.value == 401) {
-                refreshToken()
+                refreshToken(userId)
                 return@runBlocking getPlaylistTracks(userId, playlistId)
             }
             response.receive()
@@ -114,7 +125,7 @@ class SpotifyClientImpl(
                 return null
             }
             if (response.status.value == 401) {
-                refreshToken()
+                refreshToken(userId)
                 return getTrackAudioAnalysis(userId, trackId)
             }
             response.receive()
@@ -127,7 +138,7 @@ class SpotifyClientImpl(
                 accept(ContentType.Application.Json)
             }
             if (response.status.value == 401) {
-                refreshToken()
+                refreshToken(userId)
                 return getTrackAudioFeatures(userId, trackId)
             }
             response.receive()
@@ -147,7 +158,7 @@ class SpotifyClientImpl(
             )
         }
         if (response.status.value == 401) {
-            refreshToken()
+            refreshToken(userId)
             return@runBlocking playTrack(userId, trackId, deviceId, positionMs)
         }
         response.receive()
@@ -160,7 +171,7 @@ class SpotifyClientImpl(
             contentType(ContentType.Application.Json)
         }
         if (response.status.value == 401) {
-            refreshToken()
+            refreshToken(userId)
             return@runBlocking pausePlayback(userId)
         }
         response.receive()
@@ -174,7 +185,7 @@ class SpotifyClientImpl(
                     accept(ContentType.Application.Json)
                 }
                 if (response.status.value == 401) {
-                    refreshToken()
+                    refreshToken(userId)
                     return@runBlocking getTrack(userId, trackId)
                 }
                 response.receive()
@@ -188,7 +199,7 @@ class SpotifyClientImpl(
             accept(ContentType.Application.Json)
         }
         if (response.status.value == 401) {
-            refreshToken()
+            refreshToken(userId)
             return@runBlocking seekPlaybackPosition(userId, positionMs)
         }
         response.receive()
@@ -200,7 +211,7 @@ class SpotifyClientImpl(
             accept(ContentType.Application.Json)
         }
         if (response.status.value == 401) {
-            refreshToken()
+            refreshToken(userId)
             return@runBlocking getPlaybackState(userId)
         }
         if (response.status.value == 204) {
@@ -216,7 +227,7 @@ class SpotifyClientImpl(
             accept(ContentType.Application.Json)
         }
         if (response.status.value == 401) {
-            refreshToken()
+            refreshToken(userId)
             return@runBlocking setVolume(userId, volumePercent)
         }
         response.receive()
@@ -228,7 +239,7 @@ class SpotifyClientImpl(
             accept(ContentType.Application.Json)
         }
         if (response.status.value == 401) {
-            refreshToken()
+            refreshToken(userId)
             return@runBlocking getAvailableDevices(userId)
         }
         response.receive()
@@ -249,6 +260,6 @@ class SpotifyClientImpl(
     private fun getAccessToken(userId: String) : String? =
         userStorage.getBySpotifyUserId(userId)?.accessToken
 
-    private fun getRefreshToken() : String? =
-        userStorage.getBySpotifyUserId("")?.refreshToken
+    private fun getRefreshToken(userId: String) : String? =
+        userStorage.getBySpotifyUserId(userId)?.refreshToken
 }

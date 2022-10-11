@@ -9,6 +9,8 @@ import dgounaris.dionysus.tracks.models.TrackDetails
 import dgounaris.dionysus.view.currentUserPlaylistsSelectionView
 import dgounaris.dionysus.view.playlistTracksView
 import io.ktor.application.*
+import io.ktor.auth.*
+import io.ktor.auth.jwt.*
 import io.ktor.html.*
 import io.ktor.http.*
 import io.ktor.request.*
@@ -39,19 +41,19 @@ class PlaylistsControllerImpl(
                 }
                 call.respondHtml { getCurrentUserPlaylists(this) }
             }
-            get("/v1/playlists/me") {
-                if (!authorizationController.isAuthorized("")) {
-                    return@get call.respond(HttpStatusCode.Unauthorized)
+            authenticate {
+                get("/v1/playlists/me") {
+                    val userId = authorizationController.getCurrentUserId(call)
+                    call.respond(getCurrentUserPlaylistsV1(userId))
                 }
-                call.respond(getCurrentUserPlaylistsV1())
             }
-            get("/v1/playlists/tracks") {
-                if (!authorizationController.isAuthorized("")) {
-                    return@get call.respond(HttpStatusCode.Unauthorized)
+            authenticate {
+                get("/v1/playlists/tracks") {
+                    val userId = authorizationController.getCurrentUserId(call)
+                    val playlistId = call.request.queryParameters["playlistName"]
+                        ?: call.receiveParameters()["playlistName"]!!
+                    call.respond(getPlaylistTracksV1(userId, playlistId))
                 }
-                val playlistId = call.request.queryParameters["playlistName"]
-                    ?: call.receiveParameters()["playlistName"]!!
-                call.respond(getPlaylistTracksV1(playlistId))
             }
         }
     }
@@ -78,13 +80,11 @@ class PlaylistsControllerImpl(
         currentUserPlaylistsSelectionView(html, currentUserPlaylists)
     }
 
-    private fun getCurrentUserPlaylistsV1() : List<String> {
-        val userId = authorizationController.getCurrentUserId()
+    private fun getCurrentUserPlaylistsV1(userId: String) : List<String> {
         return playlistDetailsProvider.getUserPlaylistNames(userId)
     }
 
-    private fun getPlaylistTracksV1(playlistName: String) : PlaylistResponseDto {
-        val userId = authorizationController.getCurrentUserId()
+    private fun getPlaylistTracksV1(userId: String, playlistName: String) : PlaylistResponseDto {
         val playlist = playlistDetailsProvider.getPlaylistDetails(userId, playlistName)
         val playlistTrackDetails = runBlocking {
             playlist.tracks.parallelMap { track ->

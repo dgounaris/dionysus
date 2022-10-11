@@ -10,6 +10,7 @@ interface PlaybackPlanMediator {
     fun saveActivePlaybackJob(userId: String, playbackJob: Job)
     fun getNextPlanItem(user: String) : PlaybackPlanItem?
     fun getActivePlaybackJob(userId: String) : Job?
+    fun deleteActivePlaybackJob(userId: String)
     fun clearPlaybackPlanQueue(userId: String)
 }
 
@@ -31,6 +32,10 @@ class SimplePlaybackPlanMediator : PlaybackPlanMediator {
     }
 
     override fun getActivePlaybackJob(userId: String) = activePlaybackJobs[userId]
+
+    override fun deleteActivePlaybackJob(userId: String) {
+        activePlaybackJobs.remove(userId)
+    }
 
     override fun getNextPlanItem(user: String) : PlaybackPlanItem? {
         return playbackQueue[user]?.poll()

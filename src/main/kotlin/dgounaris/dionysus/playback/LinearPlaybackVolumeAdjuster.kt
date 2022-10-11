@@ -1,6 +1,7 @@
 package dgounaris.dionysus.playback
 
 import dgounaris.dionysus.clients.SpotifyClient
+import dgounaris.dionysus.common.PropertiesProvider
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlin.math.max
@@ -10,9 +11,9 @@ class LinearPlaybackVolumeAdjuster(
     private val spotifyClient: SpotifyClient
     ) : PlaybackVolumeAdjuster {
 
-    private val fadeMilliseconds = 50
-    private val volumeChangeIntervalMilliseconds = 10
-    private val volumeReduction = 25
+    private val fadeMilliseconds = PropertiesProvider.configuration.getProperty("fadeMilliseconds")!!.toInt()
+    private val volumeChangeIntervalMilliseconds = PropertiesProvider.configuration.getProperty("volumeChangeIntervalMilliseconds")!!.toInt()
+    private val volumeReduction = PropertiesProvider.configuration.getProperty("volumeReduction")!!.toInt()
 
     override fun getFadeMilliseconds(): Int = fadeMilliseconds
 

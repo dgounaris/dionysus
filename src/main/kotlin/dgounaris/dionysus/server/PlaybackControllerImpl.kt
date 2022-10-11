@@ -13,6 +13,7 @@ import dgounaris.dionysus.tracks.models.TrackSectionStartEnd
 import dgounaris.dionysus.tracks.models.TrackSections
 import dgounaris.dionysus.view.postAutoplayView
 import io.ktor.application.*
+import io.ktor.auth.*
 import io.ktor.html.*
 import io.ktor.http.*
 import io.ktor.request.*
@@ -32,11 +33,11 @@ class PlaybackControllerImpl(
     ): PlaybackController {
     override fun configureRouting(application: Application) {
         application.routing {
-            get("/v1/playback/devices") {
-                if (!authorizationController.isAuthorized("")) {
-                    return@get call.respond(HttpStatusCode.Unauthorized)
+            authenticate {
+                get("/v1/playback/devices") {
+                    val userId = authorizationController.getCurrentUserId(call)
+                    call.respond(getAvailablePlaybackDevicesV1(userId))
                 }
-                call.respond(getAvailablePlaybackDevicesV1())
             }
             post("/playback/play/auto") {
                 if (!authorizationController.isAuthorized("")) {
@@ -45,13 +46,13 @@ class PlaybackControllerImpl(
                 val formParameters = call.receiveParameters()
                 call.respondHtml { autoplay(formParameters, this) }
             }
-            post("/v1/playback/play/auto") {
-                if (!authorizationController.isAuthorized("")) {
-                    return@post call.respond(HttpStatusCode.Unauthorized)
+            authenticate {
+                post("/v1/playback/play/auto") {
+                    val userId = authorizationController.getCurrentUserId(call)
+                    val requestBody = call.receive<AutoplayRequestDto>()
+                    autoplayV1(userId, requestBody)
+                    call.respond(HttpStatusCode.OK)
                 }
-                val requestBody = call.receive<AutoplayRequestDto>()
-                autoplayV1(requestBody)
-                call.respond(HttpStatusCode.OK)
             }
             post("/playback/feedback") {
                 submitFeedback()
@@ -63,12 +64,12 @@ class PlaybackControllerImpl(
                 val formParameters = call.receiveParameters()
                 call.respondHtml { stopPlayback(formParameters, this) }
             }
-            post("/v1/playback/stop") {
-                if (!authorizationController.isAuthorized("")) {
-                    return@post call.respond(HttpStatusCode.Unauthorized)
+            authenticate {
+                post("/v1/playback/stop") {
+                    val userId = authorizationController.getCurrentUserId(call)
+                    stopPlaybackV1(userId)
+                    call.respond(HttpStatusCode.OK)
                 }
-                stopPlaybackV1(authorizationController.getCurrentUserId())
-                call.respond(HttpStatusCode.OK)
             }
             post("/playback/pause") {
                 if (!authorizationController.isAuthorized("")) {
@@ -77,12 +78,12 @@ class PlaybackControllerImpl(
                 val formParameters = call.receiveParameters()
                 call.respondHtml { pausePlayback(formParameters, this) }
             }
-            post("/v1/playback/pause") {
-                if (!authorizationController.isAuthorized("")) {
-                    return@post call.respond(HttpStatusCode.Unauthorized)
+            authenticate {
+                post("/v1/playback/pause") {
+                    val userId = authorizationController.getCurrentUserId(call)
+                    pausePlaybackV1(userId)
+                    call.respond(HttpStatusCode.OK)
                 }
-                pausePlaybackV1(authorizationController.getCurrentUserId())
-                call.respond(HttpStatusCode.OK)
             }
             post("/playback/resume") {
                 if (!authorizationController.isAuthorized("")) {
@@ -91,12 +92,12 @@ class PlaybackControllerImpl(
                 val formParameters = call.receiveParameters()
                 call.respondHtml { resumePlayback(formParameters, this) }
             }
-            post("/v1/playback/resume") {
-                if (!authorizationController.isAuthorized("")) {
-                    return@post call.respond(HttpStatusCode.Unauthorized)
+            authenticate {
+                post("/v1/playback/resume") {
+                    val userId = authorizationController.getCurrentUserId(call)
+                    resumePlaybackV1(userId)
+                    call.respond(HttpStatusCode.OK)
                 }
-                resumePlaybackV1(authorizationController.getCurrentUserId())
-                call.respond(HttpStatusCode.OK)
             }
             post("/playback/next") {
                 if (!authorizationController.isAuthorized("")) {
@@ -105,18 +106,17 @@ class PlaybackControllerImpl(
                 val formParameters = call.receiveParameters()
                 call.respondHtml { nextPlayback(formParameters, this) }
             }
-            post("/v1/playback/next") {
-                if (!authorizationController.isAuthorized("")) {
-                    return@post call.respond(HttpStatusCode.Unauthorized)
+            authenticate {
+                post("/v1/playback/next") {
+                    val userId = authorizationController.getCurrentUserId(call)
+                    nextPlaybackV1(userId)
+                    call.respond(HttpStatusCode.OK)
                 }
-                nextPlaybackV1(authorizationController.getCurrentUserId())
-                call.respond(HttpStatusCode.OK)
             }
         }
     }
 
-    private fun getAvailablePlaybackDevicesV1() : List<AvailableDevice> {
-        val userId = authorizationController.getCurrentUserId()
+    private fun getAvailablePlaybackDevicesV1(userId: String) : List<AvailableDevice> {
         return playbackOrchestrator.getAvailableDevices(userId)
     }
 
@@ -144,8 +144,7 @@ class PlaybackControllerImpl(
         responseAutoplayStartedOk(html)
     }
 
-    private fun autoplayV1(body: AutoplayRequestDto) {
-        val userId = authorizationController.getCurrentUserId()
+    private fun autoplayV1(userId: String, body: AutoplayRequestDto) {
         val playbackDetails = body.playbackDetails
         val playlistName = body.playlistName
 

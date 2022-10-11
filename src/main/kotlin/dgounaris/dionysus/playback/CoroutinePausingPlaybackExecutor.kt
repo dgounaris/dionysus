@@ -29,21 +29,27 @@ class CoroutinePausingPlaybackExecutor(
 
     private fun stop(userId: String) {
         playbackPlanMediator.getActivePlaybackJob(userId)?.cancel("Stop event occurred")
+        playbackPlanMediator.deleteActivePlaybackJob(userId)
         playbackPlanMediator.clearPlaybackPlanQueue(userId)
         spotifyClient.pausePlayback(userId)
     }
 
     private suspend fun next(userId: String) {
         playbackPlanMediator.getActivePlaybackJob(userId)?.cancel("Next event occurred")
+        playbackPlanMediator.deleteActivePlaybackJob(userId)
         play(userId)
     }
 
     private fun pause(userId: String) {
         playbackPlanMediator.getActivePlaybackJob(userId)?.cancel("Pause event occurred")
+        playbackPlanMediator.deleteActivePlaybackJob(userId)
         spotifyClient.pausePlayback(userId)
     }
 
     private suspend fun play(userId: String) {
+        if (playbackPlanMediator.getActivePlaybackJob(userId) != null) {
+            return
+        }
         coroutineScope {
             launch {
                 while (true) {

@@ -31,7 +31,7 @@ class SectionMergingPlaybackOrchestrator(
         }.forEach {
             playbackPlanMediator.savePlaybackPlanItem(it)
         }
-        playbackEventHandler.pushEvent(PlaybackEvent("", PlaybackEventType.START))
+        playbackEventHandler.pushEvent(PlaybackEvent(userId, PlaybackEventType.START))
     }
 
     override fun onPauseEvent(userId: String) {

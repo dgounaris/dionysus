@@ -1,6 +1,6 @@
 plugins {
     id 'java'
-    id 'org.jetbrains.kotlin.jvm' version '1.5.31'
+    id 'org.jetbrains.kotlin.jvm' version '1.6.10'
     id 'application'
     id "com.github.johnrengelman.shadow" version "7.1.2"
 }
@@ -13,7 +13,7 @@ repositories {
 }
 
 ext.koin_version = "3.1.4"
-ext.ktor_version = "1.6.1"
+ext.ktor_version = "1.6.8"
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib"
@@ -23,8 +23,11 @@ dependencies {
     implementation "io.ktor:ktor-client-jackson:$ktor_version"
     implementation "io.ktor:ktor-server-core:$ktor_version"
     implementation "io.ktor:ktor-server-netty:$ktor_version"
+    implementation("io.ktor:ktor-auth:$ktor_version")
+    implementation("io.ktor:ktor-auth-jwt:$ktor_version")
     implementation "io.ktor:ktor-jackson:$ktor_version"
     implementation "io.ktor:ktor-html-builder:$ktor_version"
+    implementation "com.auth0:java-jwt:4.0.0"
     implementation "ch.qos.logback:logback-classic:1.2.10"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2"
     implementation "com.fasterxml.jackson.module:jackson-module-kotlin:2.10.2"
