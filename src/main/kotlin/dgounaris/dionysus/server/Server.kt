@@ -17,7 +17,6 @@ import java.text.DateFormat
 
 class Server(
     private val playlistsController: PlaylistsController,
-    private val tracksController: TracksController,
     private val playbackController: PlaybackController,
     private val authorizationController: AuthorizationController
     ) {
@@ -59,7 +58,6 @@ class Server(
                 allowNonSimpleContentTypes = true
             }
             playlistsController.configureRouting(this)
-            tracksController.configureRouting(this)
             playbackController.configureRouting(this)
             authorizationController.configureRouting(this)
         }.start(wait = true)
