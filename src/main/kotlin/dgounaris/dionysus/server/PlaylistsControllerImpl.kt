@@ -5,6 +5,7 @@ import dgounaris.dionysus.common.parallelMap
 import dgounaris.dionysus.playlists.PlaylistDetailsProvider
 import dgounaris.dionysus.tracks.TrackDetailsProvider
 import dgounaris.dionysus.tracks.models.TrackDetails
+import dgounaris.dionysus.tracks.models.TrackSection
 import io.ktor.application.*
 import io.ktor.auth.*
 import io.ktor.request.*
@@ -43,47 +44,16 @@ class PlaylistsControllerImpl(
     private fun getPlaylistTracksV1(userId: String, playlistName: String) : PlaylistResponseDto {
         val playlist = playlistDetailsProvider.getPlaylistDetails(userId, playlistName)
         val playlistTrackDetails = runBlocking {
-            playlist.tracks.parallelMap { track ->
-                val trackDetails = trackDetailsProvider.getTrackDetails(userId, track.id)
-                trackDetails.toTrackDetailsResponseDto()
-            }
+            playlist.tracks.parallelMap { track -> trackDetailsProvider.getTrackDetails(userId, track.id) }
         }
-        val playlistResponse = PlaylistResponseDto(
+        return PlaylistResponseDto(
             playlist.name, playlist.id, playlistTrackDetails
         )
-        return playlistResponse
     }
 }
 
 data class PlaylistResponseDto(
     val name: String,
     val id: String,
-    val trackDetails: List<TrackDetailsResponseDto>
+    val trackDetails: List<TrackDetails>
 )
-
-data class TrackDetailsResponseDto(
-    val id: String,
-    val name: String,
-    val sections: List<TrackSectionResponseDto>
-)
-
-data class TrackSectionResponseDto(
-    val start : Double,
-    val end : Double,
-    val tempo : Double,
-    val key : Int,
-    val mode : Int,
-    val timeSignature : Int
-)
-
-fun TrackDetails.toTrackDetailsResponseDto() =
-    TrackDetailsResponseDto(this.id, this.name, this.sections.map { section ->
-        TrackSectionResponseDto(
-            section.start,
-            section.end,
-            section.tempo,
-            section.key,
-            section.mode,
-            section.timeSignature
-        )
-    })

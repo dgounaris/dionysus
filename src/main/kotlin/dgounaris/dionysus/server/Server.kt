@@ -18,7 +18,8 @@ import java.text.DateFormat
 class Server(
     private val playlistsController: PlaylistsController,
     private val playbackController: PlaybackController,
-    private val authorizationController: AuthorizationController
+    private val authorizationController: AuthorizationController,
+    private val playbackPlanController: PlaybackPlanController
     ) {
     fun start() {
         embeddedServer(Netty, port = 8888) {
@@ -60,6 +61,7 @@ class Server(
             playlistsController.configureRouting(this)
             playbackController.configureRouting(this)
             authorizationController.configureRouting(this)
+            playbackPlanController.configureRouting(this)
         }.start(wait = true)
     }
 }

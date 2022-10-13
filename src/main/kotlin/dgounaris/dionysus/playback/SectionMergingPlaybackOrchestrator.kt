@@ -2,6 +2,7 @@ package dgounaris.dionysus.playback
 
 import dgounaris.dionysus.clients.SpotifyClient
 import dgounaris.dionysus.playback.models.*
+import dgounaris.dionysus.tracks.models.TrackSection
 import dgounaris.dionysus.tracks.models.TrackSectionStartEnd
 import dgounaris.dionysus.tracks.models.TrackSections
 import kotlin.math.max
@@ -20,17 +21,15 @@ class SectionMergingPlaybackOrchestrator(
             .toList()
     }
 
-    override fun play(userId: String, tracksSections: List<TrackSections>, playbackDetails: PlaybackDetails) {
-        val mergedTrackSectionsList = tracksSections.map { findSongSectionsToPlay(it) }
-        val currentTime = System.currentTimeMillis()
-        var delayFromPrevious = 0.0
-        mergedTrackSectionsList.map {
-            val item = PlaybackPlanItem(userId, currentTime + (delayFromPrevious * 1000).toLong(), it, playbackDetails)
-            delayFromPrevious += (it.sections.lastOrNull()?.end ?: 0.0) - (it.sections.firstOrNull()?.start ?: 0.0)
-            return@map item
-        }.forEach {
-            playbackPlanMediator.savePlaybackPlanItem(it)
-        }
+    override fun pushPlaybackPlanItem(userId: String, trackId: String, trackSections: List<TrackSection>) {
+        val finalTrackSections = TrackSections(trackId, trackSections.map { section -> TrackSectionStartEnd(section.start, section.end) })
+        val mergedTrackSectionsList = findSongSectionsToPlay(finalTrackSections)
+        val item = PlaybackPlanItem(userId, mergedTrackSectionsList)
+        playbackPlanMediator.savePlaybackPlanItem(item)
+    }
+
+    override fun play(userId: String, playbackDetails: PlaybackDetails) {
+        playbackPlanMediator.setPlaybackDetails(userId, playbackDetails)
         playbackEventHandler.pushEvent(PlaybackEvent(userId, PlaybackEventType.START))
     }
 

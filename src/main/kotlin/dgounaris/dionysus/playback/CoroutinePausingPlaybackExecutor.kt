@@ -19,49 +19,58 @@ class CoroutinePausingPlaybackExecutor(
 
     override suspend fun handleEvent(playbackEvent: PlaybackEvent) {
         when (playbackEvent.eventType) {
-            PlaybackEventType.START ->  { play(playbackEvent.user) }
+            PlaybackEventType.START ->  { start(playbackEvent.user) }
             PlaybackEventType.STOP -> { stop(playbackEvent.user) }
             PlaybackEventType.PAUSE -> { pause(playbackEvent.user) }
-            PlaybackEventType.RESUME -> { play(playbackEvent.user) }
+            PlaybackEventType.RESUME -> { resume(playbackEvent.user) }
             PlaybackEventType.NEXT -> { next(playbackEvent.user) }
         }
     }
 
     private fun stop(userId: String) {
-        playbackPlanMediator.getActivePlaybackJob(userId)?.cancel("Stop event occurred")
         playbackPlanMediator.deleteActivePlaybackJob(userId)
         playbackPlanMediator.clearPlaybackPlanQueue(userId)
         spotifyClient.pausePlayback(userId)
     }
 
     private suspend fun next(userId: String) {
-        playbackPlanMediator.getActivePlaybackJob(userId)?.cancel("Next event occurred")
         playbackPlanMediator.deleteActivePlaybackJob(userId)
         play(userId)
     }
 
     private fun pause(userId: String) {
-        playbackPlanMediator.getActivePlaybackJob(userId)?.cancel("Pause event occurred")
         playbackPlanMediator.deleteActivePlaybackJob(userId)
         spotifyClient.pausePlayback(userId)
     }
 
-    private suspend fun play(userId: String) {
+    private suspend fun start(userId: String) {
         if (playbackPlanMediator.getActivePlaybackJob(userId) != null) {
             return
         }
+        play(userId)
+    }
+
+    private suspend fun resume(userId: String) {
+        if (playbackPlanMediator.getActivePlaybackJob(userId) != null) {
+            return
+        }
+        play(userId)
+    }
+
+    private suspend fun play(userId: String) {
+        val playbackDetails = playbackPlanMediator.getPlaybackDetails(userId) ?: return
         coroutineScope {
             launch {
                 while (true) {
                     playbackPlanMediator.getNextPlanItem(userId)?.let {
-                        val playbackDetails = it.playbackDetails
                         val playbackVolumeAdjuster = async { playbackVolumeAdjusterStrategy.getVolumeAdjuster(playbackDetails) }
-                        val playAsync = async { playSongSections(userId, it.trackSections, it.playbackDetails) }
+                        val playAsync = async { playSongSections(userId, it.trackSections, playbackDetails) }
                         playbackVolumeAdjuster.await().fadeIn(userId, playbackDetails.selectedDeviceVolumePercent)
                         playAsync.await()
                         playbackVolumeAdjuster.await().fadeOut(userId, playbackDetails.selectedDeviceVolumePercent)
                     } ?: break
                 }
+                playbackPlanMediator.deleteActivePlaybackJob(userId)
             }.also { playbackPlanMediator.saveActivePlaybackJob(userId, it) }
         }
     }

@@ -1,16 +1,15 @@
 package dgounaris.dionysus.dionysense
 
+import dgounaris.dionysus.dionysense.models.SelectionOptions
 import dgounaris.dionysus.tracks.TrackDetailsProvider
 import dgounaris.dionysus.tracks.models.TrackSection
-import dgounaris.dionysus.tracks.models.TrackSections
 
 class TrackSectionSelectorImpl(private val trackDetailsProvider: TrackDetailsProvider) : TrackSectionSelector {
-    private val perSideTotalDuration = 40
-
-    override suspend fun selectSections(userId: String, trackId: String) : List<TrackSection> {
+    override suspend fun selectSections(userId: String, trackId: String, selectionOptions: SelectionOptions) : List<TrackSection> {
         val sections = trackDetailsProvider.getTrackDetails(userId, trackId).sections
 
-        val selectedSections = selectSectionsByBestSectionGroup(sections)
+        val selectedSections = selectSectionsByBestSectionGroup(
+            sections, selectionOptions.minimumSelectionDuration, selectionOptions.maximumSelectionDuration)
 
         return if (selectedSections.contains(sections.last())) {
             selectedSections.dropLast(1) + selectedSections.last().copy(end = selectedSections.last().end - 4)
@@ -21,10 +20,10 @@ class TrackSectionSelectorImpl(private val trackDetailsProvider: TrackDetailsPro
         }
     }
 
-    private fun selectSectionsByBestSectionGroup(sections: List<TrackSection>) : List<TrackSection> {
+    private fun selectSectionsByBestSectionGroup(sections: List<TrackSection>, minimumDuration: Int, maximumDuration: Int) : List<TrackSection> {
         val sortedSections = sections.sortedBy { it.start }
         val sectionGroups = filterOutSectionsThatCanNotGenerateGroup(sortedSections).mapIndexed { i, it ->
-            listOf(it) + CreateGroupFromSections(sortedSections, i)
+            listOf(it) + createGroupFromSections(sortedSections, i, minimumDuration, maximumDuration)
         }
         return sectionGroups.maxByOrNull { group -> group.sumOf { section -> section.loudness }/group.size }!!
     }
@@ -39,41 +38,11 @@ class TrackSectionSelectorImpl(private val trackDetailsProvider: TrackDetailsPro
         } }
     }
 
-    private fun CreateGroupFromSections(sections: List<TrackSection>, currentIndex: Int): List<TrackSection> {
+    private fun createGroupFromSections(sections: List<TrackSection>, currentIndex: Int, minimumDuration: Int, maximumDuration: Int): List<TrackSection> {
         var duration = sections[currentIndex].duration
         return sections.drop(currentIndex+1).takeWhile { section ->
-            (duration + section.duration <= 100 || duration < 75)
+            (duration + section.duration <= maximumDuration || duration < minimumDuration)
                 .also { duration += section.duration }
         }
-    }
-
-    private fun selectPreviousSections(sections: List<TrackSection>, evaluatedIndex: Int, duration: Double): List<TrackSection> {
-        if (evaluatedIndex < 0 || evaluatedIndex > sections.size - 1) {
-            return emptyList()
-        }
-        if (duration < perSideTotalDuration) {
-            return listOf(sections[evaluatedIndex]) +
-                    selectPreviousSections(sections, evaluatedIndex - 1, duration + sections[evaluatedIndex].duration)
-        }
-        if (sections[evaluatedIndex].confidence > 0.7 || duration >= perSideTotalDuration) {
-            return emptyList()
-        }
-        return listOf(sections[evaluatedIndex]) +
-                selectPreviousSections(sections, evaluatedIndex - 1, duration + sections[evaluatedIndex].duration)
-    }
-
-    private fun selectSubsequentSections(sections: List<TrackSection>, evaluatedIndex: Int, duration: Double): List<TrackSection> {
-        if (evaluatedIndex < 0 || evaluatedIndex > sections.size - 1) {
-            return emptyList()
-        }
-        if (duration < perSideTotalDuration) {
-            return listOf(sections[evaluatedIndex]) +
-                    selectSubsequentSections(sections, evaluatedIndex + 1, duration + sections[evaluatedIndex].duration)
-        }
-        if (sections[evaluatedIndex].confidence > 0.7 || duration >= perSideTotalDuration) {
-            return emptyList()
-        }
-        return listOf(sections[evaluatedIndex]) +
-                selectSubsequentSections(sections, evaluatedIndex + 1, duration + sections[evaluatedIndex].duration)
     }
 }

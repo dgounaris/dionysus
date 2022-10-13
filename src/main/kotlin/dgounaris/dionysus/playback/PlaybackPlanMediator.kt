@@ -1,5 +1,6 @@
 package dgounaris.dionysus.playback
 
+import dgounaris.dionysus.playback.models.PlaybackDetails
 import dgounaris.dionysus.playback.models.PlaybackPlanItem
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
@@ -12,11 +13,14 @@ interface PlaybackPlanMediator {
     fun getActivePlaybackJob(userId: String) : Job?
     fun deleteActivePlaybackJob(userId: String)
     fun clearPlaybackPlanQueue(userId: String)
+    fun setPlaybackDetails(userId: String, playbackDetails: PlaybackDetails)
+    fun getPlaybackDetails(userId: String) : PlaybackDetails?
 }
 
 class SimplePlaybackPlanMediator : PlaybackPlanMediator {
     private val playbackQueue = ConcurrentHashMap<String, ConcurrentLinkedQueue<PlaybackPlanItem>>()
     private val activePlaybackJobs = ConcurrentHashMap<String, Job>()
+    private val selectedPlaybackDetails = ConcurrentHashMap<String, PlaybackDetails>()
 
     override fun savePlaybackPlanItem(playbackPlanItem: PlaybackPlanItem) {
         val userQueue = playbackQueue.getOrDefault(playbackPlanItem.user, ConcurrentLinkedQueue())
@@ -34,6 +38,7 @@ class SimplePlaybackPlanMediator : PlaybackPlanMediator {
     override fun getActivePlaybackJob(userId: String) = activePlaybackJobs[userId]
 
     override fun deleteActivePlaybackJob(userId: String) {
+        activePlaybackJobs[userId]?.cancel()
         activePlaybackJobs.remove(userId)
     }
 
@@ -44,4 +49,11 @@ class SimplePlaybackPlanMediator : PlaybackPlanMediator {
     override fun clearPlaybackPlanQueue(userId: String) {
         playbackQueue[userId]?.clear()
     }
+
+    override fun setPlaybackDetails(userId: String, playbackDetails: PlaybackDetails) {
+        selectedPlaybackDetails[userId] = playbackDetails
+    }
+
+    override fun getPlaybackDetails(userId: String) =
+        selectedPlaybackDetails[userId]
 }

@@ -1,9 +1,10 @@
 package dgounaris.dionysus.dionysense
 
 import dgounaris.dionysus.tracks.TrackDetailsProvider
+import dgounaris.dionysus.tracks.models.Track
 
 class TrackOrderSelectorImpl(private val trackDetailsProvider: TrackDetailsProvider) : TrackOrderSelector {
-    override suspend fun selectOrder(userId: String, trackIds: List<String>) : List<String> {
+    override suspend fun selectOrder(userId: String, trackIds: List<String>) : List<Track> {
         val sortedTrackDetails = trackIds.map { trackId -> trackDetailsProvider.getTrackDetails(userId, trackId) }
             .sortedBy { details -> details.features.tempo + details.features.danceability }
         val medianValence = sortedTrackDetails.map { it.features.valence }
@@ -19,6 +20,6 @@ class TrackOrderSelectorImpl(private val trackDetailsProvider: TrackDetailsProvi
         //return sortedTrackDetails.reversed().map { it.id }
 
         val bellSortedTrackDetails = happySongs + sadSongs.reversed()
-        return bellSortedTrackDetails.map { it.id }
+        return bellSortedTrackDetails.map { Track(it.name, it.id) }
     }
 }

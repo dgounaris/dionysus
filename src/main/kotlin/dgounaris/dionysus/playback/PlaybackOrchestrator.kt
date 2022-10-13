@@ -2,14 +2,12 @@ package dgounaris.dionysus.playback
 
 import dgounaris.dionysus.playback.models.AvailableDevice
 import dgounaris.dionysus.playback.models.PlaybackDetails
-import dgounaris.dionysus.playback.models.PlaybackEvent
-import dgounaris.dionysus.playback.models.PlaybackEventType
-import dgounaris.dionysus.tracks.models.TrackSections
-import dgounaris.dionysus.user.models.User
+import dgounaris.dionysus.tracks.models.TrackSection
 
 interface PlaybackOrchestrator {
     fun getAvailableDevices(userId: String) : List<AvailableDevice>
-    fun play(userId: String, tracksSections: List<TrackSections>, playbackDetails: PlaybackDetails)
+    fun pushPlaybackPlanItem(userId: String, trackId: String, trackSections: List<TrackSection>)
+    fun play(userId: String, playbackDetails: PlaybackDetails)
     fun onPauseEvent(userId: String)
     fun onResumeEvent(userId: String)
     fun onStopEvent(userId: String)
