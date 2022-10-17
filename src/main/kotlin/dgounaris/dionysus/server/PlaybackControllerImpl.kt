@@ -1,26 +1,18 @@
 package dgounaris.dionysus.server
 
 import dgounaris.dionysus.auth.AuthorizationController
-import dgounaris.dionysus.common.parallelMap
-import dgounaris.dionysus.dionysense.TrackOrderSelector
-import dgounaris.dionysus.dionysense.TrackSectionSelector
 import dgounaris.dionysus.playback.PlaybackOrchestrator
 import dgounaris.dionysus.playback.models.AvailableDevice
 import dgounaris.dionysus.playback.models.PlaybackDetails
-import dgounaris.dionysus.playlists.PlaylistDetailsProvider
-import io.ktor.application.*
-import io.ktor.auth.*
+import io.ktor.server.application.*
+import io.ktor.server.auth.*
 import io.ktor.http.*
-import io.ktor.request.*
-import io.ktor.response.*
-import io.ktor.routing.*
-import kotlinx.coroutines.runBlocking
+import io.ktor.server.request.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import kotlin.concurrent.thread
 
 class PlaybackControllerImpl(
-    private val playlistDetailsProvider: PlaylistDetailsProvider,
-    private val trackSectionSelector: TrackSectionSelector,
-    private val trackOrderSelector: TrackOrderSelector,
     private val playbackOrchestrator: PlaybackOrchestrator,
     private val authorizationController: AuthorizationController
     ): PlaybackController {
