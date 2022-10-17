@@ -11,11 +11,7 @@ class TrackSectionSelectorImpl(private val trackDetailsProvider: TrackDetailsPro
         val selectedSections = selectSectionsByBestSectionGroup(
             sections, selectionOptions.minimumSelectionDuration, selectionOptions.maximumSelectionDuration)
 
-        return if (selectedSections.contains(sections.last())) {
-            selectedSections.dropLast(1) + selectedSections.last().copy(end = selectedSections.last().end - 4)
-        } else {
-            selectedSections
-        }.also {
+        return selectedSections.also {
             println("Dionysense TrackSelection: TrackId: $trackId, Sections: ${it.joinToString(" ") { "[${it.start}-${it.end}]" }}")
         }
     }
