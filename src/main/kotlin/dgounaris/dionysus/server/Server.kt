@@ -5,14 +5,16 @@ import com.auth0.jwt.algorithms.Algorithm
 import com.fasterxml.jackson.databind.SerializationFeature
 import dgounaris.dionysus.auth.AuthorizationController
 import dgounaris.dionysus.common.PropertiesProvider
-import io.ktor.application.*
-import io.ktor.auth.*
-import io.ktor.auth.jwt.*
-import io.ktor.features.*
+import io.ktor.server.application.*
+import io.ktor.server.auth.*
+import io.ktor.server.auth.jwt.*
+import io.ktor.server.plugins.cors.routing.*
 import io.ktor.http.*
-import io.ktor.jackson.*
+import io.ktor.serialization.jackson.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import io.ktor.server.plugins.contentnegotiation.*
+import io.ktor.server.plugins.cors.routing.*
 import java.text.DateFormat
 
 class Server(
@@ -48,14 +50,14 @@ class Server(
                 }
             }
             install(CORS) {
-                host("localhost:3001", listOf("http", "https"), listOf("www", ""))
-                header(HttpHeaders.Authorization)
-                method(HttpMethod.Get)
-                method(HttpMethod.Post)
-                method(HttpMethod.Options)
-                method(HttpMethod.Put)
-                method(HttpMethod.Patch)
-                method(HttpMethod.Delete)
+                allowHost("localhost:3001", listOf("http", "https"), listOf("www", ""))
+                allowHeader(HttpHeaders.Authorization)
+                allowMethod(HttpMethod.Get)
+                allowMethod(HttpMethod.Post)
+                allowMethod(HttpMethod.Options)
+                allowMethod(HttpMethod.Put)
+                allowMethod(HttpMethod.Patch)
+                allowMethod(HttpMethod.Delete)
                 allowNonSimpleContentTypes = true
             }
             playlistsController.configureRouting(this)

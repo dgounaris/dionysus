@@ -5,13 +5,11 @@ import com.auth0.jwt.algorithms.Algorithm
 import dgounaris.dionysus.clients.SpotifyClient
 import dgounaris.dionysus.common.PropertiesProvider
 import dgounaris.dionysus.storage.user.UserStorage
-import io.ktor.application.*
-import io.ktor.auth.*
-import io.ktor.auth.jwt.*
-import io.ktor.html.*
-import io.ktor.response.*
-import io.ktor.routing.*
-import kotlinx.html.*
+import io.ktor.server.application.*
+import io.ktor.server.auth.*
+import io.ktor.server.auth.jwt.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 
 class AuthorizationControllerImpl(
     private val spotifyClient: SpotifyClient,
@@ -19,14 +17,6 @@ class AuthorizationControllerImpl(
     ) : AuthorizationController {
     override fun configureRouting(application: Application) {
         application.routing {
-            get("/test") {
-                call.respondText { "Hello World!" }
-            }
-            get("/login") {
-                call.respondHtml {
-                    login(this)
-                }
-            }
             get("/v1/login") {
                 call.respondRedirect(spotifyClient.getAuthorizeUrl())
             }
@@ -53,10 +43,6 @@ class AuthorizationControllerImpl(
     override fun getCurrentUserId(call: ApplicationCall): String {
         val principal = call.principal<JWTPrincipal>()
         return principal!!.payload.getClaim("userId").asString()
-    }
-
-    private fun login(html: HTML) {
-        val authUrl = spotifyClient.getAuthorizeUrl()
     }
 
     private fun callback(code: String, state: String?) : String =
