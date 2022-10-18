@@ -8,6 +8,7 @@ import dgounaris.dionysus.storage.user.UserStorage
 import dgounaris.dionysus.user.models.User
 import io.ktor.client.*
 import io.ktor.client.call.*
+import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.observer.*
 import io.ktor.client.request.*
@@ -30,6 +31,10 @@ class SpotifyClientImpl(
             jackson {
                 configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
             }
+        }
+        install(HttpRequestRetry) {
+            retryOnServerErrors(maxRetries = 5)
+            exponentialDelay()
         }
         ResponseObserver { response ->
             println("Spotify client: ${response.call.request.url} - ${response.status.value}")
