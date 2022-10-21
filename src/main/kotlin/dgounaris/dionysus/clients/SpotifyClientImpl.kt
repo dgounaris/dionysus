@@ -34,7 +34,8 @@ class SpotifyClientImpl(
         }
         install(HttpRequestRetry) {
             retryOnServerErrors(maxRetries = 5)
-            exponentialDelay()
+            retryIf { _, httpResponse -> httpResponse.status == HttpStatusCode.TooManyRequests }
+            exponentialDelay(respectRetryAfterHeader = true)
         }
         ResponseObserver { response ->
             println("Spotify client: ${response.call.request.url} - ${response.status.value}")
@@ -46,13 +47,6 @@ class SpotifyClientImpl(
                 "&client_id=$clientId" +
                 "&scope=user-read-private+user-read-email+playlist-read-private+user-modify-playback-state+user-read-playback-state" +
                 "&redirect_uri=http%3A%2F%2Flocalhost%3A8888%2Fcallback"
-    }
-
-    override fun authorize(): String = runBlocking {
-        httpClient.get("https://accounts.spotify.com/authorize?response_type=code" +
-                "&client_id=$clientId" +
-                "&scope=user-read-private+user-read-email+playlist-read-private+user-modify-playback-state+user-read-playback-state" +
-                "&redirect_uri=http%3A%2F%2Flocalhost%3A8888%2Fcallback").body()
     }
 
     override fun getTokens(code: String) : String = runBlocking {
