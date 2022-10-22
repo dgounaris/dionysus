@@ -65,9 +65,9 @@ class CoroutinePausingPlaybackExecutor(
                     playbackPlanMediator.getNextPlanItem(userId)?.let {
                         val playbackVolumeAdjuster = async { playbackVolumeAdjusterStrategy.getVolumeAdjuster(playbackDetails) }
                         val playAsync = async { playSongSections(userId, it.trackSections, playbackDetails) }
-                        playbackVolumeAdjuster.await().fadeIn(userId, playbackDetails.selectedDeviceVolumePercent)
+                        playbackVolumeAdjuster.await().fadeIn(userId, playbackDetails.selectedDeviceVolumePercent, playbackDetails.fadeDetails)
                         playAsync.await()
-                        playbackVolumeAdjuster.await().fadeOut(userId, playbackDetails.selectedDeviceVolumePercent)
+                        playbackVolumeAdjuster.await().fadeOut(userId, playbackDetails.selectedDeviceVolumePercent, playbackDetails.fadeDetails)
                     } ?: break
                 }
                 playbackPlanMediator.deleteActivePlaybackJob(userId)

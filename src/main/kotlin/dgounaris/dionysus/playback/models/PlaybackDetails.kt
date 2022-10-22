@@ -4,7 +4,7 @@ data class PlaybackDetails(
     val selectedDeviceId: String,
     val selectedDeviceType: String,
     val selectedDeviceVolumePercent: Int,
-    val fadeDetails: FadeDetails?
+    val fadeDetails: FadeDetails
 )
 
 data class FadeDetails(
