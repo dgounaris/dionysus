@@ -29,35 +29,35 @@ class PlaybackControllerImpl(
                     val userId = authorizationController.getCurrentUserId(call)
                     val requestBody = call.receive<AutoplayRequestDto>()
                     autoplayV1(userId, requestBody)
-                    call.respond(HttpStatusCode.OK)
+                    call.respond(HttpStatusCode.OK, PlaybackUpdateResponseDto(PlaybackState.PLAYING))
                 }
             }
             authenticate {
                 post("/v1/playback/stop") {
                     val userId = authorizationController.getCurrentUserId(call)
                     stopPlaybackV1(userId)
-                    call.respond(HttpStatusCode.OK)
+                    call.respond(HttpStatusCode.OK, PlaybackUpdateResponseDto(PlaybackState.STOPPED))
                 }
             }
             authenticate {
                 post("/v1/playback/pause") {
                     val userId = authorizationController.getCurrentUserId(call)
                     pausePlaybackV1(userId)
-                    call.respond(HttpStatusCode.OK)
+                    call.respond(HttpStatusCode.OK, PlaybackUpdateResponseDto(PlaybackState.PAUSED))
                 }
             }
             authenticate {
                 post("/v1/playback/resume") {
                     val userId = authorizationController.getCurrentUserId(call)
                     resumePlaybackV1(userId)
-                    call.respond(HttpStatusCode.OK)
+                    call.respond(HttpStatusCode.OK, PlaybackUpdateResponseDto(PlaybackState.PLAYING))
                 }
             }
             authenticate {
                 post("/v1/playback/next") {
                     val userId = authorizationController.getCurrentUserId(call)
                     nextPlaybackV1(userId)
-                    call.respond(HttpStatusCode.OK)
+                    call.respond(HttpStatusCode.OK, PlaybackUpdateResponseDto(PlaybackState.PLAYING))
                 }
             }
         }
@@ -93,3 +93,13 @@ class PlaybackControllerImpl(
 data class AutoplayRequestDto(
     val playbackDetails: PlaybackDetails
 )
+
+data class PlaybackUpdateResponseDto(
+    val playbackState: PlaybackState
+)
+
+enum class PlaybackState {
+    PLAYING,
+    PAUSED,
+    STOPPED
+}
