@@ -1,9 +1,9 @@
 package dgounaris.dionysus.playback
 
 import dgounaris.dionysus.clients.SpotifyClient
-import dgounaris.dionysus.common.PropertiesProvider
 import dgounaris.dionysus.playback.models.FadeDetails
 import kotlinx.coroutines.delay
+import kotlin.math.ceil
 import kotlin.math.max
 import kotlin.math.min
 
@@ -33,7 +33,7 @@ class LinearPlaybackVolumeAdjuster(
         var timesVolumeChanged = 0
         var currentVolume = startVolume
         while (timesVolumeChanged < selectedFadeMilliseconds/selectedVolumeChangeIntervalMilliseconds) {
-            currentVolume += (selectedVolumeReduction/(selectedFadeMilliseconds/selectedVolumeChangeIntervalMilliseconds))
+            currentVolume += ceil(selectedVolumeReduction.toDouble()/(selectedFadeMilliseconds/selectedVolumeChangeIntervalMilliseconds)).toInt()
             spotifyClient.setVolume(userId, min(currentVolume, 100))
             delay(selectedVolumeChangeIntervalMilliseconds.toLong())
             timesVolumeChanged += 1
