@@ -18,7 +18,7 @@ class AuthorizationControllerImpl(
     override fun configureRouting(application: Application) {
         application.routing {
             get("/v1/login") {
-                call.respondRedirect(spotifyClient.getAuthorizeUrl())
+                call.respond(LoginResponseDto(spotifyClient.getAuthorizeUrl()))
             }
             get("/callback") {
                 val userId = callback(call.request.queryParameters["code"]!!, call.request.queryParameters["state"])
@@ -48,3 +48,7 @@ class AuthorizationControllerImpl(
     private fun callback(code: String, state: String?) : String =
         spotifyClient.getTokens(code)
 }
+
+data class LoginResponseDto(
+    val loginUrl: String
+)
