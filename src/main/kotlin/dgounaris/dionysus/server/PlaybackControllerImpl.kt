@@ -4,6 +4,8 @@ import dgounaris.dionysus.auth.AuthorizationController
 import dgounaris.dionysus.playback.PlaybackOrchestrator
 import dgounaris.dionysus.playback.models.AvailableDevice
 import dgounaris.dionysus.playback.models.PlaybackDetails
+import dgounaris.dionysus.playback.models.PlaybackState
+import dgounaris.dionysus.storage.user.UserStorage
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.http.*
@@ -14,7 +16,8 @@ import kotlin.concurrent.thread
 
 class PlaybackControllerImpl(
     private val playbackOrchestrator: PlaybackOrchestrator,
-    private val authorizationController: AuthorizationController
+    private val authorizationController: AuthorizationController,
+    private val userStorage: UserStorage
     ): PlaybackController {
     override fun configureRouting(application: Application) {
         application.routing {
@@ -60,6 +63,16 @@ class PlaybackControllerImpl(
                     call.respond(HttpStatusCode.OK, PlaybackUpdateResponseDto(PlaybackState.PLAYING))
                 }
             }
+            authenticate {
+                get("/v1/playback/client") {
+                    val userId = authorizationController.getCurrentUserId(call)
+                    call.respond(
+                        PlaybackClientResponseDto(
+                            userStorage.getBySpotifyUserId(userId)?.accessToken
+                        )
+                    )
+                }
+            }
         }
     }
 
@@ -98,8 +111,6 @@ data class PlaybackUpdateResponseDto(
     val playbackState: PlaybackState
 )
 
-enum class PlaybackState {
-    PLAYING,
-    PAUSED,
-    STOPPED
-}
+data class PlaybackClientResponseDto(
+    val token: String?
+)

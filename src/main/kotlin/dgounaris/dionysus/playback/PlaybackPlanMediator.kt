@@ -2,6 +2,7 @@ package dgounaris.dionysus.playback
 
 import dgounaris.dionysus.playback.models.PlaybackDetails
 import dgounaris.dionysus.playback.models.PlaybackPlanItem
+import dgounaris.dionysus.playback.models.PlaybackState
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
 import java.util.concurrent.*
@@ -15,6 +16,7 @@ interface PlaybackPlanMediator {
     fun clearPlaybackPlanQueue(userId: String)
     fun setPlaybackDetails(userId: String, playbackDetails: PlaybackDetails)
     fun getPlaybackDetails(userId: String) : PlaybackDetails?
+    fun getCurrentPlaybackState(userId: String): PlaybackState
 }
 
 class SimplePlaybackPlanMediator : PlaybackPlanMediator {
@@ -36,6 +38,16 @@ class SimplePlaybackPlanMediator : PlaybackPlanMediator {
     }
 
     override fun getActivePlaybackJob(userId: String) = activePlaybackJobs[userId]
+
+    override fun getCurrentPlaybackState(userId: String): PlaybackState {
+        if (activePlaybackJobs[userId] != null) {
+            return PlaybackState.PLAYING
+        }
+        if (playbackQueue[userId]?.isNotEmpty() == true) {
+            return PlaybackState.PAUSED
+        }
+        return PlaybackState.STOPPED
+    }
 
     override fun deleteActivePlaybackJob(userId: String) {
         activePlaybackJobs[userId]?.cancel()
