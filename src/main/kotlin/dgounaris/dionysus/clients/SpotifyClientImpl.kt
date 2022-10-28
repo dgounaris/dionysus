@@ -25,6 +25,7 @@ class SpotifyClientImpl(
 ) : SpotifyClient {
     private val clientId = PropertiesProvider.configuration.getProperty("spotifyClientId")
     private val clientSecret = PropertiesProvider.configuration.getProperty("spotifyClientSecret")
+    private val backendCallbackUrl = PropertiesProvider.configuration.getProperty("backendCallbackUrl")
     private val httpClient = HttpClient {
         expectSuccess = false
         install(ContentNegotiation) {
@@ -46,7 +47,7 @@ class SpotifyClientImpl(
         return "https://accounts.spotify.com/authorize?response_type=code" +
                 "&client_id=$clientId" +
                 "&scope=streaming+user-library-read+user-library-modify+user-read-private+user-read-email+playlist-read-private+user-modify-playback-state+user-read-playback-state" +
-                "&redirect_uri=http%3A%2F%2Flocalhost%3A8888%2Fcallback"
+                "&redirect_uri=$backendCallbackUrl"
     }
 
     override fun getTokens(code: String) : String = runBlocking {
@@ -258,8 +259,8 @@ class SpotifyClientImpl(
     }
 
     private fun getAccessToken(userId: String) : String? =
-        userStorage.getBySpotifyUserId(userId)?.accessToken
+        userStorage.getBySpotifyUserId(userId)?.spotifyAccessToken
 
     private fun getRefreshToken(userId: String) : String? =
-        userStorage.getBySpotifyUserId(userId)?.refreshToken
+        userStorage.getBySpotifyUserId(userId)?.spotifyRefreshToken
 }

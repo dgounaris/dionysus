@@ -21,7 +21,8 @@ class Server(
     private val playlistsController: PlaylistsController,
     private val playbackController: PlaybackController,
     private val authorizationController: AuthorizationController,
-    private val playbackPlanController: PlaybackPlanController
+    private val playbackPlanController: PlaybackPlanController,
+    private val statePollingController: StatePollingController
     ) {
     fun start() {
         embeddedServer(Netty, port = 8888) {
@@ -50,7 +51,7 @@ class Server(
                 }
             }
             install(CORS) {
-                allowHost("localhost:3001", listOf("http", "https"), listOf("www", ""))
+                allowHost("localhost:3000", listOf("http", "https"), listOf("www", ""))
                 allowHeader(HttpHeaders.Authorization)
                 allowMethod(HttpMethod.Get)
                 allowMethod(HttpMethod.Post)
@@ -64,6 +65,7 @@ class Server(
             playbackController.configureRouting(this)
             authorizationController.configureRouting(this)
             playbackPlanController.configureRouting(this)
+            statePollingController.configureRouting(this)
         }.start(wait = true)
     }
 }

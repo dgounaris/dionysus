@@ -3,7 +3,6 @@ package dgounaris.dionysus.playback
 import dgounaris.dionysus.playback.models.PlaybackDetails
 import dgounaris.dionysus.playback.models.PlaybackPlanItem
 import dgounaris.dionysus.playback.models.PlaybackState
-import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
 import java.util.concurrent.*
 

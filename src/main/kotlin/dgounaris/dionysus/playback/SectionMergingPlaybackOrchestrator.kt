@@ -33,6 +33,10 @@ class SectionMergingPlaybackOrchestrator(
         playbackEventHandler.pushEvent(PlaybackEvent(userId, PlaybackEventType.START))
     }
 
+    override fun getCurrentState(userId: String): PlaybackState {
+        return playbackPlanMediator.getCurrentPlaybackState(userId)
+    }
+
     override fun onPauseEvent(userId: String) {
         playbackEventHandler.pushEvent(PlaybackEvent(userId, PlaybackEventType.PAUSE))
     }

@@ -68,7 +68,7 @@ class PlaybackControllerImpl(
                     val userId = authorizationController.getCurrentUserId(call)
                     call.respond(
                         PlaybackClientResponseDto(
-                            userStorage.getBySpotifyUserId(userId)?.accessToken
+                            userStorage.getBySpotifyUserId(userId)?.spotifyAccessToken
                         )
                     )
                 }
