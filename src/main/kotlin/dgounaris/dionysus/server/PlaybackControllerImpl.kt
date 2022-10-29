@@ -64,6 +64,14 @@ class PlaybackControllerImpl(
                 }
             }
             authenticate {
+                post("/v1/playback/update") {
+                    val userId = authorizationController.getCurrentUserId(call)
+                    val newVolume = call.request.queryParameters["volume"]!!
+                    playbackOrchestrator.updateVolume(userId, newVolume.toInt())
+                    call.respond(HttpStatusCode.OK)
+                }
+            }
+            authenticate {
                 get("/v1/playback/client") {
                     val userId = authorizationController.getCurrentUserId(call)
                     call.respond(

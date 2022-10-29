@@ -51,7 +51,8 @@ class Server(
                 }
             }
             install(CORS) {
-                allowHost("localhost:3000", listOf("http", "https"), listOf("www", ""))
+                allowHost(Url(PropertiesProvider.configuration.getProperty("frontendBaseUrl")).host, listOf("http", "https"), listOf("www", ""))
+                anyHost()
                 allowHeader(HttpHeaders.Authorization)
                 allowMethod(HttpMethod.Get)
                 allowMethod(HttpMethod.Post)

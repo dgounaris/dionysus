@@ -9,6 +9,7 @@ interface PlaybackOrchestrator {
     fun getAvailableDevices(userId: String) : List<AvailableDevice>
     fun pushPlaybackPlanItem(userId: String, trackId: String, trackSections: List<TrackSection>)
     fun play(userId: String, playbackDetails: PlaybackDetails)
+    fun updateVolume(userId: String, volumePercent: Int)
     fun getCurrentState(userId: String): PlaybackState
     fun onPauseEvent(userId: String)
     fun onResumeEvent(userId: String)

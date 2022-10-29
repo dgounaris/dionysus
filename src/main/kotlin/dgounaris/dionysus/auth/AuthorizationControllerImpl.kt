@@ -29,7 +29,8 @@ class AuthorizationControllerImpl(
                 val refreshToken = generateRefreshToken(userId)
                 userStorage.getBySpotifyUserId(userId)?.copy(isLoggedIn = true)
                     ?.apply { userStorage.save(this) }
-                call.respondRedirect(PropertiesProvider.configuration.getProperty("spotifyCallbackUrl")
+                call.respondRedirect(PropertiesProvider.configuration.getProperty("frontendBaseUrl")
+                        + "/login/callback"
                         + "?token=" + jwtToken
                         + "&refresh=" + refreshToken, false)
             }

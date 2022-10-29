@@ -173,4 +173,4 @@ gradle-app.setting
 
 dionysus_cache_old
 
-**/dev.app.properties
+**/*.app.properties

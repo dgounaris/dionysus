@@ -33,6 +33,15 @@ class SectionMergingPlaybackOrchestrator(
         playbackEventHandler.pushEvent(PlaybackEvent(userId, PlaybackEventType.START))
     }
 
+    override fun updateVolume(userId: String, volumePercent: Int) {
+        if (playbackPlanMediator.getPlaybackDetails(userId) != null) {
+            playbackPlanMediator.setPlaybackDetails(
+                userId,
+                playbackPlanMediator.getPlaybackDetails(userId)!!.copy(selectedDeviceVolumePercent=volumePercent)
+            )
+        }
+    }
+
     override fun getCurrentState(userId: String): PlaybackState {
         return playbackPlanMediator.getCurrentPlaybackState(userId)
     }

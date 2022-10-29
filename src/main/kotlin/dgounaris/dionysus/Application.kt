@@ -5,6 +5,7 @@ import dgounaris.dionysus.clients.clientsModule
 import dgounaris.dionysus.dionysense.dionysenseModule
 import dgounaris.dionysus.playback.playbackModule
 import dgounaris.dionysus.playlists.playlistsModule
+import dgounaris.dionysus.presence.presenceModule
 import dgounaris.dionysus.server.Server
 import dgounaris.dionysus.server.serverModule
 import dgounaris.dionysus.storage.storageModule
@@ -19,6 +20,7 @@ fun main(vararg args: String) {
             tracksModule,
             playlistsModule,
             playbackModule,
+            presenceModule,
             dionysenseModule,
             serverModule,
             storageModule,

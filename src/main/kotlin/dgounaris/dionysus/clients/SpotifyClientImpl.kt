@@ -26,6 +26,7 @@ class SpotifyClientImpl(
     private val clientId = PropertiesProvider.configuration.getProperty("spotifyClientId")
     private val clientSecret = PropertiesProvider.configuration.getProperty("spotifyClientSecret")
     private val backendCallbackUrl = PropertiesProvider.configuration.getProperty("backendCallbackUrl")
+    private val backendRawCallbackUrl = PropertiesProvider.configuration.getProperty("backendRawCallbackUrl")
     private val httpClient = HttpClient {
         expectSuccess = false
         install(ContentNegotiation) {
@@ -55,7 +56,7 @@ class SpotifyClientImpl(
                 header("Authorization", "Basic ${Base64.getEncoder().encodeToString("$clientId:$clientSecret".toByteArray())}")
                 setBody(FormDataContent(Parameters.build {
                     append("code", code)
-                    append("redirect_uri", "http://localhost:8888/callback")
+                    append("redirect_uri", backendRawCallbackUrl)
                     append("grant_type", "authorization_code")
                 }))
                 accept(ContentType.Application.Json)

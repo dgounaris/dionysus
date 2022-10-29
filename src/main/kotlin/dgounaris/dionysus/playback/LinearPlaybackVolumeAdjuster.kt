@@ -11,32 +11,38 @@ class LinearPlaybackVolumeAdjuster(
     private val spotifyClient: SpotifyClient
     ) : PlaybackVolumeAdjuster {
     override suspend fun fadeOut(userId: String, baselineVolume: Int, fadeDetails: FadeDetails) {
-        val selectedFadeMilliseconds = fadeDetails.fadeMilliseconds
-        val selectedVolumeChangeIntervalMilliseconds = fadeDetails.volumeChangeIntervalMilliseconds
-        val selectedVolumeReduction = fadeDetails.volumeTotalReduction
-        var timesVolumeChanged = 0
+        val finalVolume = baselineVolume * (100-fadeDetails.volumeTotalReduction) / 100
+        val volumeStepReduction = ceil(
+            fadeDetails.volumeTotalReduction.toDouble()/(fadeDetails.fadeMilliseconds/fadeDetails.volumeChangeIntervalMilliseconds)
+        ).toInt()
         var currentVolume = baselineVolume
-        val timesVolumeShouldChange = selectedFadeMilliseconds/selectedVolumeChangeIntervalMilliseconds
-        while (timesVolumeChanged < timesVolumeShouldChange) {
-            currentVolume -= selectedVolumeReduction/timesVolumeShouldChange
+        while (currentVolume > finalVolume) {
+            currentVolume =
+                if (currentVolume-volumeStepReduction > finalVolume) {
+                    currentVolume-volumeStepReduction
+                } else {
+                    finalVolume
+                }
             spotifyClient.setVolume(userId, max(currentVolume, 0))
-            delay(selectedVolumeChangeIntervalMilliseconds.toLong())
-            timesVolumeChanged += 1
+            delay(fadeDetails.volumeChangeIntervalMilliseconds.toLong())
         }
     }
 
     override suspend fun fadeIn(userId: String, baselineVolume: Int, fadeDetails: FadeDetails) {
-        val selectedFadeMilliseconds = fadeDetails.fadeMilliseconds
-        val selectedVolumeChangeIntervalMilliseconds = fadeDetails.volumeChangeIntervalMilliseconds
-        val selectedVolumeReduction = fadeDetails.volumeTotalReduction
-        val startVolume = max(baselineVolume - fadeDetails.volumeTotalReduction, 0)
-        var timesVolumeChanged = 0
-        var currentVolume = startVolume
-        while (timesVolumeChanged < selectedFadeMilliseconds/selectedVolumeChangeIntervalMilliseconds) {
-            currentVolume += ceil(selectedVolumeReduction.toDouble()/(selectedFadeMilliseconds/selectedVolumeChangeIntervalMilliseconds)).toInt()
-            spotifyClient.setVolume(userId, min(currentVolume, 100))
-            delay(selectedVolumeChangeIntervalMilliseconds.toLong())
-            timesVolumeChanged += 1
+        val finalVolume = baselineVolume
+        val volumeStepIncrease = ceil(
+            fadeDetails.volumeTotalReduction.toDouble()/(fadeDetails.fadeMilliseconds/fadeDetails.volumeChangeIntervalMilliseconds)
+        ).toInt()
+        var currentVolume = baselineVolume * (100-fadeDetails.volumeTotalReduction) / 100
+        while (currentVolume < finalVolume) {
+            currentVolume =
+                if (currentVolume+volumeStepIncrease < finalVolume) {
+                    currentVolume+volumeStepIncrease
+                } else {
+                    finalVolume
+                }
+            spotifyClient.setVolume(userId, max(currentVolume, 0))
+            delay(fadeDetails.volumeChangeIntervalMilliseconds.toLong())
         }
     }
 }
