@@ -133,7 +133,7 @@ class SpotifyClientImpl(
             response.body()
         }
 
-    override suspend fun getTrackAudioFeatures(userId: String, trackId: String) : TrackAudioFeaturesResponseDto =
+    override suspend fun getTrackAudioFeatures(userId: String, trackId: String) : TrackAudioFeaturesResponseDto? =
         executeWithCache("getTrackAudioFeatures_$trackId") {
             val response : HttpResponse = httpClient.get("https://api.spotify.com/v1/audio-features/$trackId") {
                 header("Authorization", "Bearer ${getAccessToken(userId)}")
@@ -142,6 +142,9 @@ class SpotifyClientImpl(
             if (response.status.value == 401) {
                 refreshToken(userId)
                 return getTrackAudioFeatures(userId, trackId)
+            }
+            if (response.status.value == 404) {
+                return null
             }
             response.body()
         }
