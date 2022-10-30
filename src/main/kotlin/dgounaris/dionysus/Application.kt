@@ -20,7 +20,6 @@ fun main(vararg args: String) {
             tracksModule,
             playlistsModule,
             playbackModule,
-            presenceModule,
             dionysenseModule,
             serverModule,
             storageModule,

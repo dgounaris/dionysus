@@ -41,8 +41,8 @@ class TrackDetailsProviderImpl(
         ) }
     }
 
-    private suspend fun getTrackFeatures(userId: String, trackId: String) : TrackAudioFeatures {
-        val features = spotifyClient.getTrackAudioFeatures(userId, trackId)
+    private suspend fun getTrackFeatures(userId: String, trackId: String) : TrackAudioFeatures? {
+        val features = spotifyClient.getTrackAudioFeatures(userId, trackId) ?: return null
         return TrackAudioFeatures(
             features.acousticness,
             features.danceability,

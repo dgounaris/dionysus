@@ -14,8 +14,9 @@ import io.ktor.serialization.jackson.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.contentnegotiation.*
-import io.ktor.server.plugins.cors.routing.*
+import io.ktor.server.websocket.*
 import java.text.DateFormat
+import java.time.Duration
 
 class Server(
     private val playlistsController: PlaylistsController,
@@ -31,6 +32,10 @@ class Server(
                     enable(SerializationFeature.INDENT_OUTPUT)
                     dateFormat = DateFormat.getDateInstance()
                 }
+            }
+            install(WebSockets) {
+                pingPeriod = Duration.ofSeconds(20)
+                timeout = Duration.ofSeconds(15)
             }
             install(Authentication) {
                 jwt {

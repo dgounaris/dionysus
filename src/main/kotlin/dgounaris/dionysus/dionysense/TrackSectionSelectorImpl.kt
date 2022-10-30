@@ -21,7 +21,7 @@ class TrackSectionSelectorImpl(private val trackDetailsProvider: TrackDetailsPro
         val sectionGroups = filterOutSectionsThatCanNotGenerateGroup(sortedSections).mapIndexed { i, it ->
             listOf(it) + createGroupFromSections(sortedSections, i, minimumDuration, maximumDuration)
         }
-        return sectionGroups.maxByOrNull { group -> group.sumOf { section -> section.loudness }/group.size }!!
+        return sectionGroups.maxByOrNull { group -> group.sumOf { section -> section.loudness }/group.size } ?: emptyList()
     }
 
     private fun filterOutSectionsThatCanNotGenerateGroup(sections: List<TrackSection>): List<TrackSection> {

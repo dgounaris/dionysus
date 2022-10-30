@@ -4,7 +4,7 @@ data class TrackDetails(
     val id: String,
     val name: String,
     val sections: List<TrackSection>,
-    val features: TrackAudioFeatures
+    val features: TrackAudioFeatures?
 )
 
 data class TrackSection(
