@@ -9,6 +9,8 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
 import io.ktor.util.collections.*
+import io.ktor.websocket.*
+import kotlinx.coroutines.delay
 
 class StatePollingControllerImpl(
     private val authorizationController: AuthorizationController,
@@ -28,11 +30,17 @@ class StatePollingControllerImpl(
             }
             val connections = ConcurrentSet<String>()
             authenticate {
-                webSocket("/echo") {
+                webSocket("/v1/state") {
                     val userId = authorizationController.getCurrentUserId(call)
                     connections.add(userId)
                     try {
-
+                        for (message in incoming) {
+                            outgoing.send(Frame.Text(
+                                PlaybackStatusResponseDto(
+                                    playbackOrchestrator.getCurrentState(userId)
+                                ).toString()
+                            ))
+                        }
                     } catch (e : Exception) {
                         println(e)
                     } finally {
