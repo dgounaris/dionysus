@@ -4,7 +4,8 @@ import dgounaris.dionysus.auth.AuthorizationController
 import dgounaris.dionysus.common.parallelMap
 import dgounaris.dionysus.dionysense.TrackOrderSelector
 import dgounaris.dionysus.dionysense.TrackSectionSelector
-import dgounaris.dionysus.dionysense.models.SelectionOptions
+import dgounaris.dionysus.dionysense.models.OrderSelectionStrategy
+import dgounaris.dionysus.dionysense.models.SectionSelectionOptions
 import dgounaris.dionysus.playback.PlaybackOrchestrator
 import dgounaris.dionysus.tracks.TrackDetailsProvider
 import dgounaris.dionysus.tracks.models.Track
@@ -45,7 +46,9 @@ class PlaybackPlanControllerImpl(
 
     private fun previewPlanV1(userId: String, body: PreviewPlanRequestDto): PlaybackPlanPreviewResponseDto {
         val trackDetails = runBlocking { body.tracks.map { trackDetailsProvider.getTrackDetails(userId, it.id) } }
-        val targetTracksWithCustomOrder = runBlocking { trackOrderSelector.selectOrder(userId, body.tracks.map { it.id }) }
+        val targetTracksWithCustomOrder = runBlocking {
+            trackOrderSelector.selectOrder(userId, body.tracks.map { it.id }, body.selectionOptions.orderSelectionStrategy)
+        }
         val targetSections = runBlocking {
             targetTracksWithCustomOrder
                 .parallelMap { track ->
@@ -53,7 +56,7 @@ class PlaybackPlanControllerImpl(
                         track.id,
                         track.name,
                         trackSectionSelector.selectSections(
-                            userId, track.id, SelectionOptions(body.selectionOptions.minimumSelectionDuration, body.selectionOptions.maximumSelectionDuration)
+                            userId, track.id, SectionSelectionOptions(body.selectionOptions.minimumSelectionDuration, body.selectionOptions.maximumSelectionDuration)
                         )
                     )
                 }
@@ -89,7 +92,8 @@ data class PreviewPlanRequestDto(
 
 data class SelectionOptionsDto(
     val minimumSelectionDuration: Int,
-    val maximumSelectionDuration: Int
+    val maximumSelectionDuration: Int,
+    val orderSelectionStrategy: OrderSelectionStrategy = OrderSelectionStrategy.NONE
 )
 
 data class SubmitPlanRequestDto(

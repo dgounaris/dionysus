@@ -1,11 +1,11 @@
 package dgounaris.dionysus.dionysense
 
-import dgounaris.dionysus.dionysense.models.SelectionOptions
+import dgounaris.dionysus.dionysense.models.SectionSelectionOptions
 import dgounaris.dionysus.tracks.TrackDetailsProvider
 import dgounaris.dionysus.tracks.models.TrackSection
 
 class TrackSectionSelectorImpl(private val trackDetailsProvider: TrackDetailsProvider) : TrackSectionSelector {
-    override suspend fun selectSections(userId: String, trackId: String, selectionOptions: SelectionOptions) : List<TrackSection> {
+    override suspend fun selectSections(userId: String, trackId: String, selectionOptions: SectionSelectionOptions) : List<TrackSection> {
         val sections = trackDetailsProvider.getTrackDetails(userId, trackId).sections
 
         val selectedSections = selectSectionsByBestSectionGroup(

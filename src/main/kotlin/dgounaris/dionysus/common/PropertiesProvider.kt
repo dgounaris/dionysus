@@ -4,6 +4,6 @@ import java.util.*
 
 class PropertiesProvider {
     companion object {
-        val configuration : Properties = PropertiesLoader.loadProperties("prod.app.properties")
+        val configuration : Properties = PropertiesLoader.loadProperties("dev.app.properties")
     }
 }
