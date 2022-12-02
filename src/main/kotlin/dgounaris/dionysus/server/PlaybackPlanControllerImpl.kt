@@ -11,6 +11,7 @@ import dgounaris.dionysus.tracks.TrackDetailsProvider
 import dgounaris.dionysus.tracks.models.Track
 import dgounaris.dionysus.tracks.models.TrackDetails
 import dgounaris.dionysus.tracks.models.TrackSection
+import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.request.*
@@ -39,6 +40,14 @@ class PlaybackPlanControllerImpl(
                     val userId = authorizationController.getCurrentUserId(call)
                     val requestBody = call.receive<SubmitPlanRequestDto>()
                     call.respond(submitPlanV1(userId, requestBody))
+                }
+            }
+            authenticate {
+                post("/v1/plan/store") {
+                    val userId = authorizationController.getCurrentUserId(call)
+                    val requestBody = call.receive<StorePlanRequestDto>()
+                    playbackOrchestrator.store(userId, requestBody.tracks, requestBody.selections, requestBody.selectionOptions)
+                    call.respond(HttpStatusCode.OK)
                 }
             }
         }
@@ -77,6 +86,12 @@ class PlaybackPlanControllerImpl(
 data class PlaybackPlanPreviewResponseDto(
     val tracks: List<TrackDetails>,
     val selections: List<TrackSelections>
+)
+
+data class StorePlanRequestDto(
+    val tracks: List<TrackDetails>,
+    val selections: List<TrackSelections>,
+    val selectionOptions: SelectionOptionsDto
 )
 
 data class TrackSelections(

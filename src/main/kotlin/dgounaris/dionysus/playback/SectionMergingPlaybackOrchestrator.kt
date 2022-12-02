@@ -2,6 +2,9 @@ package dgounaris.dionysus.playback
 
 import dgounaris.dionysus.clients.SpotifyClient
 import dgounaris.dionysus.playback.models.*
+import dgounaris.dionysus.server.SelectionOptionsDto
+import dgounaris.dionysus.server.TrackSelections
+import dgounaris.dionysus.tracks.models.TrackDetails
 import dgounaris.dionysus.tracks.models.TrackSection
 import dgounaris.dionysus.tracks.models.TrackSectionStartEnd
 import dgounaris.dionysus.tracks.models.TrackSections
@@ -31,6 +34,15 @@ class SectionMergingPlaybackOrchestrator(
     override fun play(userId: String, playbackDetails: PlaybackDetails) {
         playbackPlanMediator.setPlaybackDetails(userId, playbackDetails)
         playbackEventHandler.pushEvent(PlaybackEvent(userId, PlaybackEventType.START))
+    }
+
+    override fun store(
+        userId: String,
+        trackDetails: List<TrackDetails>,
+        selections: List<TrackSelections>,
+        selectionOptions: SelectionOptionsDto
+    ) {
+        // todo store
     }
 
     override fun updateVolume(userId: String, volumePercent: Int) {
