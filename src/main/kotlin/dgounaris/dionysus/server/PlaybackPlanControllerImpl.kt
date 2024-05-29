@@ -46,7 +46,12 @@ class PlaybackPlanControllerImpl(
                 post("/v1/plan/store") {
                     val userId = authorizationController.getCurrentUserId(call)
                     val requestBody = call.receive<StorePlanRequestDto>()
-                    playbackOrchestrator.store(userId, requestBody.tracks, requestBody.selections, requestBody.selectionOptions)
+                    playbackOrchestrator.store(
+                        userId, requestBody.tracks, requestBody.selections,
+                        SectionSelectionOptions(
+                            requestBody.selectionOptions.minimumSelectionDuration,
+                            requestBody.selectionOptions.maximumSelectionDuration,
+                            requestBody.selectionOptions.orderSelectionStrategy))
                     call.respond(HttpStatusCode.OK)
                 }
             }

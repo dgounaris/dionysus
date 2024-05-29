@@ -1,9 +1,10 @@
 package dgounaris.dionysus.playback
 
 import dgounaris.dionysus.clients.SpotifyClient
+import dgounaris.dionysus.dionysense.models.SectionSelectionOptions
 import dgounaris.dionysus.playback.models.*
-import dgounaris.dionysus.server.SelectionOptionsDto
 import dgounaris.dionysus.server.TrackSelections
+import dgounaris.dionysus.storage.playback.PlaybackPlanStorage
 import dgounaris.dionysus.tracks.models.TrackDetails
 import dgounaris.dionysus.tracks.models.TrackSection
 import dgounaris.dionysus.tracks.models.TrackSectionStartEnd
@@ -14,7 +15,8 @@ import kotlin.math.min
 class SectionMergingPlaybackOrchestrator(
     private val spotifyClient: SpotifyClient,
     private val playbackPlanMediator: PlaybackPlanMediator,
-    private val playbackEventHandler: PlaybackEventHandler
+    private val playbackEventHandler: PlaybackEventHandler,
+    private val playbackPlanStorage: PlaybackPlanStorage
     ) : PlaybackOrchestrator {
 
     override fun getAvailableDevices(userId: String) : List<AvailableDevice> {
@@ -40,9 +42,11 @@ class SectionMergingPlaybackOrchestrator(
         userId: String,
         trackDetails: List<TrackDetails>,
         selections: List<TrackSelections>,
-        selectionOptions: SelectionOptionsDto
+        selectionOptions: SectionSelectionOptions
     ) {
-        // todo store
+        playbackPlanStorage.save(
+            PlaybackPlan(userId, trackDetails, selections, selectionOptions)
+        )
     }
 
     override fun updateVolume(userId: String, volumePercent: Int) {
